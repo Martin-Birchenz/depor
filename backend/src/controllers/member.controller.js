@@ -1,4 +1,4 @@
-const memberService = require("../services/member.services.js");
+const memberService = require("../services/member.service.js");
 const { sendSuccess } = require("../middlewares/responseHandler.js");
 
 class MemberController {
