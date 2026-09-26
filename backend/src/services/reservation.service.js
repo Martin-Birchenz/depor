@@ -31,18 +31,23 @@ class ReservationService {
       throw error;
     }
 
-    let finalPrice = Number(facility.default_price);
+    let finalPrice = 0;
 
-    if (data.memberId) {
-      const [members] = await memberRepository.findAll({
-        search: null,
-        status: null,
-      });
-      const member = member.find((m) => m.idmembers === data.memberId);
+    if (data.customPrice !== undefined && data.customPrice !== null) {
+      finalPrice = Number(data.customPrice);
+    } else {
+      finalPrice = Number(facility.default_price);
+      if (data.memberId) {
+        const [members] = await memberRepository.findAll({
+          search: null,
+          status: null,
+        });
+        const member = member.find((m) => m.idmembers === data.memberId);
 
-      if (member && member.status === "active") {
-        const discountPercent = facility.member_discount_percent || 0;
-        finalPrice = finalPrice - finalPrice * (discountPercent / 100);
+        if (member && member.status === "active") {
+          const discountPercent = facility.member_discount_percent || 0;
+          finalPrice = finalPrice - finalPrice * (discountPercent / 100);
+        }
       }
     }
 

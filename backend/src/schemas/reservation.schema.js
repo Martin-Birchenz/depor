@@ -34,6 +34,11 @@ const createReservationSchema = z.object({
     .enum(["efectivo", "mercadopago", "pendiente"])
     .default("pendiente"),
   notes: z.string().max(45).optional().nullable(),
+  customPrice: z
+    .number()
+    .nonnegative("Custom price must be a positive number")
+    .optional()
+    .nullable(),
 });
 
 const updateReservationStatusSchema = z.object({
