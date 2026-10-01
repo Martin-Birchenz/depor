@@ -28,4 +28,18 @@ const authenticate = (req, res, next) => {
   }
 };
 
+const optionalAuthenticate = (req, res, next) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return next(); // Continúa sin req.user
+  }
+  try {
+    const token = authHeader.split(" ")[1];
+    const secret = process.env.JWT_SECRET || "secreto_default_dev";
+    req.user = jwt.verify(token, secret);
+  } catch (error) {}
+  next();
+};
+
 module.exports = authenticate;
+module.exports.optionalAuthenticate = optionalAuthenticate;

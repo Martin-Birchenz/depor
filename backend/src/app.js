@@ -7,6 +7,7 @@ const memberRoutes = require("./routes/member.routes.js");
 const facilityRoutes = require("./routes/facility.routes.js");
 const reservationRoutes = require("./routes/reservation.routes.js");
 const campRegistrationRoutes = require("./routes/campRegistration.routes.js");
+const productRoutes = require("./routes/product.routes.js");
 
 const app = express();
 
@@ -23,6 +24,7 @@ app.use("/api/members", memberRoutes);
 app.use("/api/facilities", facilityRoutes);
 app.use("/api/reservations", reservationRoutes);
 app.use("/api/campRegistrations", campRegistrationRoutes);
+app.use("/api/products", productRoutes);
 
 app.use(errorHandler);
 
