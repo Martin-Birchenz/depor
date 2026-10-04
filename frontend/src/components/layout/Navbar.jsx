@@ -6,7 +6,7 @@ export default function Navbar() {
       <div className="container">
         <Link to="/" className="navbar-brand fw-bold d-flex align-items-center">
           <img
-            src="/logo-deportivo.png"
+            src="../../assets/logo-deportivo.png"
             alt="Escudo Oficial Club Deportivo Nogoyá"
             width="45"
             className="me-2"

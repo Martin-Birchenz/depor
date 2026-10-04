@@ -12,7 +12,9 @@ class ProductRepository {
 
     const [products] = await pool.execute(query);
 
-    if (products.length === 0) return [];
+    if (products.length === 0) {
+      return [];
+    }
 
     const productIds = products.map((product) => product.idproducts);
     const placeholders = productIds.map(() => "?").join(",");
