@@ -13,7 +13,7 @@ export default function Indumentaria() {
       try {
         setLoading(true);
         const data = await getProducts();
-        setProducts(data);
+        setProducts(data || []);
       } catch (error) {
         console.error("Error al cargar productos:", error);
       } finally {
@@ -28,10 +28,10 @@ export default function Indumentaria() {
       .toLowerCase()
       .includes(search.toLowerCase());
 
-    if (onlyInStock) return matchesSearch;
+    if (!onlyInStock) return matchesSearch;
 
     const hasStock =
-      product.variants && product.variants.some((v) => v.stock > 0);
+      product.variants && product.variants.some((v) => Number(v.stock) > 0);
     return matchesSearch && hasStock;
   });
 
@@ -98,7 +98,7 @@ export default function Indumentaria() {
 
         <div className="alert alert-dark mt-5 text-center p-4 border-0 shadow-sm">
           <h5 className="fw-bold mb-2">¿Cómo adquirir tu indumentaria?</h5>
-          <p className="mb-0 text-white-50">
+          <p className="mb-0 text-dark-50">
             Consultá disponibilidad o reservá tu talle directamente en la
             secretaría del club o coordinando por WhatsApp con los encargados de
             la tienda.

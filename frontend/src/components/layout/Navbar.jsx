@@ -83,6 +83,11 @@ export default function Navbar() {
               </NavLink>
             </li>
             <li className="nav-item">
+              <NavLink className="nav-link" to="/turnos">
+                Turnos
+              </NavLink>
+            </li>
+            <li className="nav-item">
               <Link
                 to="/socios"
                 className="btn btn-outline-light ms-lg-3 my-2 my-lg-0"

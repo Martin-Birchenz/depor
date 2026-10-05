@@ -4,6 +4,11 @@ import Footer from "./components/layout/Footer";
 import Home from "./pages/public/Home";
 import Indumentaria from "./pages/public/Indumentaria";
 import Socios from "./pages/public/Socios";
+import Colonia from "./pages/public/Colonia";
+import Historia from "./pages/public/Historia";
+import Deportes from "./pages/public/Deportes";
+import Contacto from "./pages/public/Contacto";
+import Turnos from "./pages/public/Turnos";
 
 export default function App() {
   return (
@@ -15,6 +20,11 @@ export default function App() {
             <Route path="/" element={<Home />} />
             <Route path="/indumentaria" element={<Indumentaria />} />
             <Route path="/socios" element={<Socios />} />
+            <Route path="/colonia" element={<Colonia />} />
+            <Route path="/historia" element={<Historia />} />
+            <Route path="/deportes" element={<Deportes />} />
+            <Route path="/contacto" element={<Contacto />} />
+            <Route path="/turnos" element={<Turnos />} />
           </Routes>
         </main>
         <Footer />
