@@ -1,11 +1,11 @@
 const campRegistrationService = require("../services/campRegistration.service");
-const { sendSucces } = require("../middlewares/responseHandler");
+const { sendSuccess } = require("../middlewares/responseHandler");
 
 class CampRegistrationController {
   async create(req, res, next) {
     try {
       const registration = await campRegistrationService.register(req.body);
-      return sendSucces(
+      return sendSuccess(
         res,
         registration,
         "Registration created successfully",

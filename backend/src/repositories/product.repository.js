@@ -2,7 +2,7 @@ const pool = require("../config/db.js");
 
 class ProductRepository {
   async findAll({ onlyActive = true }) {
-    let query = `SELECT idproducts, name, description, price, memberprice, image_url, is_active FROM products WHERE 1=1`;
+    let query = `SELECT idproducts, name, description, price, member_price, image_url, is_active FROM products WHERE 1=1`;
 
     if (onlyActive) {
       query += ` AND is_active = 1`;

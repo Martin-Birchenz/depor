@@ -23,7 +23,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/members", memberRoutes);
 app.use("/api/facilities", facilityRoutes);
 app.use("/api/reservations", reservationRoutes);
-app.use("/api/campRegistrations", campRegistrationRoutes);
+app.use("/api/camp-registrations", campRegistrationRoutes);
 app.use("/api/products", productRoutes);
 
 app.use(errorHandler);
