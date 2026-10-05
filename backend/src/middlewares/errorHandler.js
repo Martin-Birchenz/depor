@@ -1,24 +1,24 @@
-const handleError = (err, req, res, next) => {
-  console.error(
-    "Error captured in errorHandler middleware:",
-    err || err.message,
-  );
+const { ZodError } = require("zod");
 
-  // Si el error fue originado por una validación de Zod
-  if (err.name === "ZodError") {
+const errorHandler = (err, req, res, next) => {
+  console.error("Error captured in errorHandler middleware:", err);
+
+  if (err instanceof ZodError) {
+    const issues = err.issues || err.errors || [];
+    const formattedErrors = issues.map((issue) => ({
+      field: issue.path ? issue.path.join(".") : "general",
+      message: issue.message,
+    }));
+
     return res.status(400).json({
       status: "error",
-      message: "Invalid request",
-      errors: err.errors.map((e) => ({
-        campo: e.path.join("."),
-        mensaje: e.message,
-      })),
+      message: "Error de validación en los datos enviados",
+      errors: formattedErrors,
     });
   }
 
-  // Para errores controlados de lógica de negocio
   const statusCode = err.statusCode || 500;
-  const message = err.message || "Internal server error";
+  const message = err.message || "Error interno del servidor";
 
   return res.status(statusCode).json({
     status: "error",
@@ -26,4 +26,4 @@ const handleError = (err, req, res, next) => {
   });
 };
 
-module.exports = handleError;
+module.exports = errorHandler;

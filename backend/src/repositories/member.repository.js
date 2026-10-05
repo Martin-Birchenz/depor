@@ -17,17 +17,21 @@ class MemberRepository {
   }
   async create(data) {
     const query = `
-            INSERT INTO members (dni, first_name, last_name, phone, email, status, member_numbe) VALUES (?, ?, ?, ?, ?, ?, ?)
-        `;
-    const [result] = await pool.execute(query, [
-      data.dni,
-      data.firstName,
-      data.lastName,
-      data.phone,
-      data.email || null,
-      data.status || "active",
-      data.memberNumber || null,
-    ]);
+      INSERT INTO members (dni, first_name, last_name, phone, email, status, member_number)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+    `;
+
+    const params = [
+      data.dni ?? null,
+      data.firstName ?? data.first_name ?? null,
+      data.lastName ?? data.last_name ?? null,
+      data.phone ?? null,
+      data.email ?? null,
+      data.status ?? "active",
+      data.memberNumber ?? data.member_number ?? null,
+    ];
+
+    const [result] = await pool.execute(query, params);
     return result.insertId;
   }
   async findAll({ search, status }) {

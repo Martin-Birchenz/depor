@@ -12,7 +12,6 @@ body {
   color: #000000;
 }
 
-/* Colores de identidad */
 .bg-black {
   background-color: #000000 !important;
 }
@@ -21,7 +20,6 @@ body {
   background-color: #f4f4f4 !important;
 }
 
-/* Navbar */
 .navbar-brand:hover {
   opacity: 0.8;
 }
@@ -38,7 +36,6 @@ body {
   opacity: 0.75;
 }
 
-/* Hero Section */
 .hero-section {
   min-height: 85vh;
   display: flex;
@@ -52,8 +49,7 @@ body {
       rgba(0, 0, 0, 0.4) 40%,
       rgba(0, 0, 0, 0.85) 100%
     ),
-    /* Podés colocar la imagen en frontend/public/copa-victoria-cdn.jpg */
-    url("/copa-victoria-cdn.jpg");
+    url("../assets/copa-victoria-cdn.jpg");
   background-size: cover;
   background-position: center;
   background-attachment: fixed;
@@ -87,7 +83,6 @@ body {
   background-color: #ffffff;
 }
 
-/* Botones con estilo propio */
 .btn-outline-light {
   padding: 8px 16px;
   font-weight: bold;
@@ -114,7 +109,6 @@ body {
   border-color: #000000;
 }
 
-/* Títulos de sección */
 .section-title {
   font-family: "Playfair Display", serif;
   text-align: center;
@@ -125,7 +119,6 @@ body {
   letter-spacing: -0.5px;
 }
 
-/* Efecto Grayscale a color para fotos históricas y disciplinas */
 .grayscale {
   filter: grayscale(100%);
   transition:
@@ -141,7 +134,6 @@ section {
   padding: 70px 0;
 }
 
-/* Cards de Disciplinas */
 .sport-card {
   border: 1px solid #e0e0e0;
   transition:
@@ -169,7 +161,6 @@ section {
   letter-spacing: 0.5px;
 }
 
-/* Footer */
 footer {
   background-color: #000000;
   color: #ffffff;
@@ -188,7 +179,6 @@ footer h5 {
   text-transform: uppercase;
 }
 
-/* Cards de Productos / Indumentaria */
 .product-card {
   transition: all 0.4s ease;
   border: 1px solid #eee;
@@ -217,4 +207,15 @@ footer h5 {
 
 .product-card:hover img {
   transform: scale(1.05);
+}
+
+#socios-container h2,
+.socios-title {
+  font-family: "Playfair Display", serif !important;
+}
+
+#socios-container .btn,
+.btn-socio {
+  font-family: "Playfair Display", serif !important;
+  letter-spacing: 0.5px;
 }

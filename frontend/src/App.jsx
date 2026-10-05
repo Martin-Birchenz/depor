@@ -3,6 +3,7 @@ import Navbar from "./components/layout/Navbar";
 import Footer from "./components/layout/Footer";
 import Home from "./pages/public/Home";
 import Indumentaria from "./pages/public/Indumentaria";
+import Socios from "./pages/public/Socios";
 
 export default function App() {
   return (
@@ -13,6 +14,7 @@ export default function App() {
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/indumentaria" element={<Indumentaria />} />
+            <Route path="/socios" element={<Socios />} />
           </Routes>
         </main>
         <Footer />

@@ -1,4 +1,5 @@
 import { Link, NavLink } from "react-router-dom";
+import logo from "../../assets/logo-deportivo.png";
 
 export default function Navbar() {
   return (
@@ -6,7 +7,7 @@ export default function Navbar() {
       <div className="container">
         <Link to="/" className="navbar-brand fw-bold d-flex align-items-center">
           <img
-            src="../../assets/logo-deportivo.png"
+            src={logo}
             alt="Escudo Oficial Club Deportivo Nogoyá"
             width="45"
             className="me-2"

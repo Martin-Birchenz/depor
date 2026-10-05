@@ -3,6 +3,14 @@ import { Link } from "react-router-dom";
 import { getProducts } from "../../service/product.service.js";
 import ProductCard from "../../components/common/ProductCard";
 
+import hinchada from "../../assets/hinchada-cdn.jpg";
+import futbol from "../../assets/futbol-cdn.jpg";
+import tenis from "../../assets/tenis-cdn.jpg";
+import padel from "../../assets/padel-cdn.jpg";
+import paleta from "../../assets/pelota-paleta-cdn.webp";
+import natacion from "../../assets/natacion-cdn.jpeg";
+import futbol5 from "../../assets/futbol-f5-cdn.png";
+
 export default function Home() {
   const [featuredProducts, setFeaturedProducts] = useState([]);
   const [loadingProducts, setLoadingProducts] = useState(true);
@@ -59,7 +67,7 @@ export default function Home() {
             </div>
             <div className="col-md-6 text-center">
               <img
-                src="/hinchada-cdn.jpg"
+                src={hinchada}
                 alt="Historia del Club Deportivo Nogoyá"
                 className="img-fluid rounded shadow grayscale"
                 onError={(e) => {
@@ -77,12 +85,18 @@ export default function Home() {
           <h2 className="section-title">Deportes en el Club</h2>
           <div className="row g-4 mt-2">
             {[
-              { name: "Fútbol", img: "/futbol-cdn.jpg" },
-              { name: "Tenis", img: "/tenis-cdn.jpg" },
-              { name: "Pádel", img: "/padel-cdn.jpg" },
-              { name: "Pelota Paleta", img: "/pelota-paleta-cdn.webp" },
-              { name: "Natación y Colonia", img: "/natacion-cdn.jpeg" },
-              { name: "Fútbol 5", img: "/futbol-f5-cdn.png" },
+              { name: "Fútbol", img: futbol },
+              { name: "Tenis", img: tenis },
+              { name: "Pádel", img: padel },
+              {
+                name: "Pelota Paleta",
+                img: paleta,
+              },
+              {
+                name: "Natación y Colonia",
+                img: natacion,
+              },
+              { name: "Fútbol 5", img: futbol5 },
             ].map((sport, index) => (
               <div key={index} className="col-6 col-md-4">
                 <div className="sport-card p-3 bg-white shadow-sm grayscale">
@@ -102,9 +116,12 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="py-5 bg-black text-white text-center">
+      <section
+        id="socios-container"
+        className="py-5 bg-black text-white text-center"
+      >
         <div className="container py-3">
-          <h2 className="display-5 fw-bold mb-3">
+          <h2 className="section-title display-5 fw-bold mb-3 text-white">
             Formá parte de la familia del Depor
           </h2>
           <p
@@ -115,7 +132,10 @@ export default function Home() {
             creciendo día a día. Disfrutá de descuentos en turnos y beneficios
             exclusivos.
           </p>
-          <Link to="/socios" className="btn btn-outline-light btn-lg px-4">
+          <Link
+            to="/socios"
+            className="btn btn-outline-light btn-lg px-4 btn-socio"
+          >
             ¡Quiero ser Socio!
           </Link>
         </div>

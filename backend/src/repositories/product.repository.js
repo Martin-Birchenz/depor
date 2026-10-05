@@ -12,7 +12,7 @@ class ProductRepository {
 
     const [products] = await pool.execute(query);
 
-    if (products.length === 0) {
+    if (!products || products.length === 0) {
       return [];
     }
 
