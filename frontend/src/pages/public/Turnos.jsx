@@ -91,54 +91,63 @@ export default function Turnos() {
           </div>
         ) : (
           <div className="row g-4">
-            {facilities.map((fac) => (
-              <div key={fac.idfacilities} className="col-12 col-md-6">
-                <div className="card h-100 p-4 border-0 shadow-sm bg-white d-flex flex-column justify-content-between">
-                  <div>
-                    <div className="d-flex justify-content-between align-items-start mb-2">
-                      <h4 className="fw-bold mb-0">{fac.name}</h4>
-                      <span className="badge bg-black text-white">
-                        {fac.sport || "Deporte"}
-                      </span>
-                    </div>
-                    <p className="text-muted small mb-4">{fac.description}</p>
-                  </div>
+            {facilities.map((fac) => {
+              const precioGeneral = Number(
+                fac.default_price || fac.hourly_rate || 0,
+              ); //
+              const descuento = Number(fac.member_discount_percent || 0);
+              const precioSocio =
+                descuento > 0
+                  ? Math.round(precioGeneral * (1 - descuento / 100))
+                  : Number(fac.member_hourly_rate || precioGeneral);
 
-                  <div className="border-top pt-3">
-                    <div className="d-flex justify-content-between align-items-baseline mb-1">
-                      <span className="text-muted small">Arancel General:</span>
-                      <span className="fw-bold fs-5">
-                        ${Number(fac.hourly_rate || 0).toLocaleString("es-AR")}{" "}
-                        / h
-                      </span>
+              return (
+                <div key={fac.idfacilities} className="col-12 col-md-6">
+                  <div className="card h-100 p-4 border-0 shadow-sm bg-white d-flex flex-column justify-content-between">
+                    <div>
+                      <div className="d-flex justify-content-between align-items-start mb-2">
+                        <h4 className="fw-bold mb-0">{fac.name}</h4>
+                        <span className="badge bg-black text-white">
+                          {fac.sport || fac.sport_type || "Deporte"}
+                        </span>{" "}
+                        {/*[cite: 1] */}
+                      </div>
+                      <p className="text-muted small mb-4">{fac.description}</p>
                     </div>
 
-                    {fac.member_hourly_rate && (
-                      <div className="d-flex justify-content-between align-items-baseline mb-3">
-                        <span className="badge bg-secondary text-white">
-                          Tarifa Socio
+                    <div className="border-top pt-3">
+                      <div className="d-flex justify-content-between align-items-baseline mb-1">
+                        <span className="text-muted small">
+                          Arancel General:
                         </span>
-                        <span className="fw-bold text-success fs-5">
-                          $
-                          {Number(fac.member_hourly_rate).toLocaleString(
-                            "es-AR",
-                          )}{" "}
-                          / h
+                        <span className="fw-bold fs-5">
+                          ${precioGeneral.toLocaleString("es-AR")} / h
                         </span>
                       </div>
-                    )}
 
-                    <button
-                      type="button"
-                      className="btn btn-dark w-100 py-3 fw-bold btn-socio mt-2"
-                      onClick={() => handleBookFacility(fac)}
-                    >
-                      Reservar Turno por WhatsApp
-                    </button>
+                      {descuento > 0 && (
+                        <div className="d-flex justify-content-between align-items-baseline mb-3">
+                          <span className="badge bg-secondary text-white">
+                            Tarifa Socio ({descuento}% OFF)
+                          </span>
+                          <span className="fw-bold text-success fs-5">
+                            ${precioSocio.toLocaleString("es-AR")} / h
+                          </span>
+                        </div>
+                      )}
+
+                      <button
+                        type="button"
+                        className="btn btn-dark w-100 py-3 fw-bold btn-socio mt-2"
+                        onClick={() => handleBookFacility(fac)}
+                      >
+                        Reservar Turno por WhatsApp
+                      </button>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
 
