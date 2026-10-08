@@ -22,7 +22,7 @@ class CampRegistrationController {
         status,
         search,
       });
-      return sendSucces(
+      return sendSuccess(
         res,
         registrations,
         "Registrations found successfully",

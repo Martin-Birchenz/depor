@@ -18,6 +18,7 @@ import Turnos from "./pages/public/Turnos";
 import Login from "./components/admin/Login";
 import Dashboard from "./components/admin/Dashboard";
 import AdminSocios from "./pages/admin/AdminSocios";
+import AdminColonia from "./pages/admin/AdminColonia.jsx";
 
 function PublicLayout() {
   return (
@@ -53,6 +54,7 @@ export default function App() {
             <Route element={<AdminLayout />}>
               <Route path="/admin" element={<Dashboard />} />
               <Route path="/admin/socios" element={<AdminSocios />} />
+              <Route path="/admin/colonia" element={<AdminColonia />} />
             </Route>
           </Route>
         </Routes>
