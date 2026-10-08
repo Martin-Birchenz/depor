@@ -1,6 +1,6 @@
 import futbolImg from "../../assets/futbol-cdn.jpg";
 import tenisImg from "../../assets/tenis-cdn.jpg";
-import padelImg from "../../assets/padel-cdn.jpg";
+import padelImg from "../../assets/padel-depor.jpeg";
 import pelotaPaletaImg from "../../assets/pelota-paleta-cdn.webp";
 import natacionImg from "../../assets/natacion-cdn.jpeg";
 import bochasImg from "../../assets/bochas-cdn.jpeg";

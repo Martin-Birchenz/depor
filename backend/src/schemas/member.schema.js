@@ -2,13 +2,13 @@ const { z } = require("zod");
 
 const createMemberSchema = z.object({
   dni: z
-    .string()
+    .string({ required_error: "DNI is required" })
     .min(6, "DNI must be at least 6 characters")
     .max(20, "DNI must be at most 20 characters")
     .trim(),
   firstName: z
-    .string()
-    .min(6, "First name must be at least 6 characters")
+    .string({ required_error: "First name is required" })
+    .min(2, "First name must be at least 2 characters")
     .max(100)
     .trim(),
   lastName: z
@@ -22,14 +22,16 @@ const createMemberSchema = z.object({
     .max(50)
     .trim(),
   email: z
-    .string({ required_error: "Email is required" })
+    .string()
     .email("Invalid email")
     .max(150)
     .trim()
     .optional()
-    .nullable(),
+    .nullable()
+    .or(z.literal("")),
   status: z.enum(["active", "inactive", "debtor"]).default("active"),
   memberNumber: z
+    .number()
     .int("Member number must be a number")
     .positive("Member number must be a positive number")
     .optional()

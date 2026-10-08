@@ -1,12 +1,14 @@
 import { useEffect, useState } from "react";
 import { getProducts } from "../../service/product.service.js";
 import ProductCard from "../../components/common/ProductCard";
+import ProductDetailModal from "../../components/common/ProductDetailModal";
 
 export default function Indumentaria() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [onlyInStock, setOnlyInStock] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState(null);
 
   useEffect(() => {
     const fetchCatalog = async () => {
@@ -85,7 +87,11 @@ export default function Indumentaria() {
         ) : filteredProducts.length > 0 ? (
           <div className="row g-4">
             {filteredProducts.map((product) => (
-              <ProductCard key={product.idproducts} product={product} />
+              <ProductCard
+                key={product.idproducts}
+                product={product}
+                onSelectDetail={(p) => setSelectedProduct(p)}
+              />
             ))}
           </div>
         ) : (
@@ -98,12 +104,19 @@ export default function Indumentaria() {
 
         <div className="alert alert-dark mt-5 text-center p-4 border-0 shadow-sm">
           <h5 className="fw-bold mb-2">¿Cómo adquirir tu indumentaria?</h5>
-          <p className="mb-0 text-dark-50">
+          <p className="mb-0 text-white-50">
             Consultá disponibilidad o reservá tu talle directamente en la
             secretaría del club o coordinando por WhatsApp con los encargados de
             la tienda.
           </p>
         </div>
+
+        {selectedProduct && (
+          <ProductDetailModal
+            product={selectedProduct}
+            onClose={() => setSelectedProduct(null)}
+          />
+        )}
       </div>
     </div>
   );

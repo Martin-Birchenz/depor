@@ -6,7 +6,7 @@ import ProductCard from "../../components/common/ProductCard";
 import hinchada from "../../assets/hinchada-cdn.jpg";
 import futbol from "../../assets/futbol-cdn.jpg";
 import tenis from "../../assets/tenis-cdn.jpg";
-import padel from "../../assets/padel-cdn.jpg";
+import padel from "../../assets/padel-depor.jpeg";
 import paleta from "../../assets/pelota-paleta-cdn.webp";
 import natacion from "../../assets/natacion-cdn.jpeg";
 import futbol5 from "../../assets/futbol-f5-cdn.png";
