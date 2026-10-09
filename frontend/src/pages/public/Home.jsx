@@ -10,6 +10,7 @@ import padel from "../../assets/padel-depor.jpeg";
 import paleta from "../../assets/pelota-paleta-cdn.webp";
 import natacion from "../../assets/natacion-cdn.jpeg";
 import futbol5 from "../../assets/futbol-f5-cdn.png";
+import infantiles from "../../assets/infantiles.jpg";
 
 export default function Home() {
   const [featuredProducts, setFeaturedProducts] = useState([]);
@@ -112,6 +113,48 @@ export default function Home() {
                 </div>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="py-5 bg-white border-top border-bottom">
+        <div className="container">
+          <div className="row align-items-center g-4">
+            <div className="col-lg-6">
+              <h2 className="section-title text-start mb-3">Fútbol Infantil</h2>
+              <p className="fs-5 text-secondary lh-base mb-4">
+                Formamos a los chicos a través del juego, el compañerismo y la
+                pasión por nuestros colores. Escuelita, categorías formativas e
+                infantiles con profesores dedicados al desarrollo integral de
+                cada deportista.
+              </p>
+              <div className="d-flex flex-wrap gap-3">
+                <a
+                  href="https://wa.me/5493435611122?text=%C2%A1Hola!%20Quiero%20m%C3%A1s%20informaci%C3%B3n%20para%20anotar%20a%20mi%20hijo/a%20en%20el%20F%C3%BAtbol%20Infantil%20del%20Depor."
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn btn-outline-dark btn-lg px-4 fw-bold shadow-sm d-inline-flex align-items-center gap-2"
+                >
+                  Consultar por WhatsApp
+                </a>
+              </div>
+            </div>
+            <div className="col-lg-6 text-center">
+              <img
+                src={infantiles}
+                alt="Fútbol Infantil Club Deportivo Nogoyá"
+                className="img-fluid rounded shadow grayscale"
+                style={{
+                  maxHeight: "380px",
+                  width: "100%",
+                  objectFit: "cover",
+                }}
+                onError={(e) => {
+                  e.currentTarget.src =
+                    "https://placehold.co/600x400/1a1a1a/fff?text=Futbol+Infantil+El+Depor";
+                }}
+              />
+            </div>
           </div>
         </div>
       </section>

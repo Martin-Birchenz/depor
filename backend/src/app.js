@@ -8,6 +8,8 @@ const facilityRoutes = require("./routes/facility.routes.js");
 const reservationRoutes = require("./routes/reservation.routes.js");
 const campRegistrationRoutes = require("./routes/campRegistration.routes.js");
 const productRoutes = require("./routes/product.routes.js");
+const youthRoutes = require("./routes/youth.routes.js");
+const canteenRoutes = require("./routes/canteen.routes.js");
 
 const app = express();
 
@@ -25,6 +27,8 @@ app.use("/api/facilities", facilityRoutes);
 app.use("/api/reservations", reservationRoutes);
 app.use("/api/camp-registrations", campRegistrationRoutes);
 app.use("/api/products", productRoutes);
+app.use("/api/youth", youthRoutes);
+app.use("/api/canteen", canteenRoutes);
 
 app.use(errorHandler);
 

@@ -1,7 +1,16 @@
-import api from "./api.js";
+import api from "./api";
 
 export const getProducts = async () => {
   const response = await api.get("/products");
-  const items = response.data?.data || response.data;
-  return Array.isArray(items) ? items : [];
+  return response.data.data;
+};
+
+export const updateProduct = async (id, productData) => {
+  const response = await api.put(`/products/${id}`, productData);
+  return response.data.data;
+};
+
+export const createProduct = async (productData) => {
+  const response = await api.post("/products", productData);
+  return response.data.data;
 };

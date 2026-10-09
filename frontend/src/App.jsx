@@ -20,6 +20,9 @@ import Dashboard from "./components/admin/Dashboard";
 import AdminSocios from "./pages/admin/AdminSocios";
 import AdminColonia from "./pages/admin/AdminColonia.jsx";
 import AdminCanchas from "./pages/admin/AdminCanchas.jsx";
+import AdminIndumentaria from "./pages/admin/AdminIndumentaria.jsx";
+import AdminCantina from "./pages/admin/AdminCantina.jsx";
+import AdminInfantiles from "./pages/admin/AdminInfantiles.jsx";
 
 function PublicLayout() {
   return (
@@ -57,6 +60,12 @@ export default function App() {
               <Route path="/admin/socios" element={<AdminSocios />} />
               <Route path="/admin/colonia" element={<AdminColonia />} />
               <Route path="/admin/canchas" element={<AdminCanchas />} />
+              <Route path="/admin/cantina" element={<AdminCantina />} />
+              <Route path="/admin/infantiles" element={<AdminInfantiles />} />
+              <Route
+                path="/admin/indumentaria"
+                element={<AdminIndumentaria />}
+              />
             </Route>
           </Route>
         </Routes>

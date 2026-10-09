@@ -36,6 +36,16 @@ export default function AdminLayout() {
       path: "/admin/indumentaria",
       roles: ["adminBirchenz", "admin", "secretaria"],
     },
+    {
+      label: "Gestión de cantina",
+      path: "/admin/cantina",
+      roles: ["adminBirchenz", "admin", "cantina", "secretaria"],
+    },
+    {
+      label: "Fútbol Infantil",
+      path: "/admin/infantiles",
+      roles: ["adminBirchenz", "admin", "infantiles", "secretaria"],
+    },
   ];
 
   const filteredMenu = menuItems.filter(
