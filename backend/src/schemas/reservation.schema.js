@@ -1,49 +1,34 @@
 const { z } = require("zod");
 
+const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+
 const timeRegex = /^([01]\d|2[0-3]):([0-5]\d)$/;
 
 const createReservationSchema = z.object({
-  facilityId: z
-    .number({ required_error: "Facility ID is required" })
-    .int()
-    .positive(),
-  memberId: z.number().int().positive().optional().nullable(),
-  clientName: z
-    .string({ required_error: "Client name is required" })
-    .min(2)
-    .max(120)
-    .trim(),
-  clientPhone: z
-    .string({ required_error: "Client phone is required" })
-    .min(6)
-    .max(150)
-    .trim(),
+  facilityId: z.number().int().positive(),
   reservationDate: z
-    .string({ required_error: "Reservation date is required" })
-    .regex(timeRegex),
-  startTime: z
-    .string({ required_error: "Start time is required" })
-    .regex(timeRegex),
-  endTime: z
-    .string({ required_error: "End time is required" })
-    .regex(timeRegex),
-  reservationType: z
-    .enum(["casual", "evento", "fijo_semanal", "clase_profesor"])
-    .default("casual"),
+    .string()
+    .regex(dateRegex, "La fecha debe tener formato YYYY-MM-DD"),
+  startTime: z.string().regex(timeRegex, "La hora de inicio debe ser HH:MM"),
+  endTime: z.string().regex(timeRegex, "La hora de fin debe ser HH:MM"),
+  clientName: z.string().min(2).max(100),
+  clientPhone: z.string().min(6).max(50),
+  isMember: z.boolean().optional().default(false),
+  depositPaid: z.number().min(0).optional().default(0),
+  finalPrice: z.number().min(0).optional().default(0),
   paymentMethod: z
-    .enum(["efectivo", "mercadopago", "pendiente"])
-    .default("pendiente"),
-  notes: z.string().max(45).optional().nullable(),
-  customPrice: z
-    .number()
-    .nonnegative("Custom price must be a positive number")
+    .enum(["efectivo", "transferencia", "debito"])
     .optional()
-    .nullable(),
+    .default("efectivo"),
+  notes: z.string().max(255).optional().nullable(),
+  status: z
+    .enum(["pendiente", "confirmado", "cancelado"])
+    .optional()
+    .default("confirmado"),
 });
 
 const updateReservationStatusSchema = z.object({
-  status: z.enum(["confirmada", "cancelada", "completada"]),
-  paymentMethod: z.enum(["efectivo", "mercadopago", "pendiente"]).optional(),
+  status: z.enum(["pendiente", "confirmado", "cancelado"]),
 });
 
 module.exports = {

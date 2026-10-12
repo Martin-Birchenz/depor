@@ -61,12 +61,12 @@ class ReservationRepository {
     SELECT
     r.idreservations,
     r.facility_id,
-    f.name,
+    f.name
     AS
     facility_name,
     f.sport_type,
     r.user_id,
-    u.name,
+    u.name
     AS
     operator_name,
     r.member_id,
