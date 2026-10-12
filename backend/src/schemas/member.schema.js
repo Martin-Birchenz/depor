@@ -4,21 +4,21 @@ const createMemberSchema = z.object({
   dni: z
     .string({ required_error: "DNI is required" })
     .min(6, "DNI must be at least 6 characters")
-    .max(20, "DNI must be at most 20 characters")
+    .max(20)
     .trim(),
   firstName: z
     .string({ required_error: "First name is required" })
-    .min(2, "First name must be at least 2 characters")
+    .min(2)
     .max(100)
     .trim(),
   lastName: z
     .string({ required_error: "Last name is required" })
-    .min(2, "Last name must be at least 2 characters")
+    .min(2)
     .max(100)
     .trim(),
   phone: z
     .string({ required_error: "Phone is required" })
-    .min(6, "Phone must be at least 6 characters")
+    .min(6)
     .max(50)
     .trim(),
   email: z
@@ -29,13 +29,20 @@ const createMemberSchema = z.object({
     .optional()
     .nullable()
     .or(z.literal("")),
-  status: z.enum(["active", "inactive", "debtor"]).default("active"),
-  memberNumber: z
-    .number()
-    .int("Member number must be a number")
-    .positive("Member number must be a positive number")
-    .optional()
-    .nullable(),
+  status: z.enum(["active", "debtor", "inactive"]).default("active"),
+  memberNumber: z.number().int().positive().optional().nullable(),
 });
 
-module.exports = { createMemberSchema };
+const updateMemberSchema = createMemberSchema.partial();
+
+const updateMemberStatusSchema = z.object({
+  status: z.enum(["active", "debtor", "inactive"], {
+    required_error: "Status is required",
+  }),
+});
+
+module.exports = {
+  createMemberSchema,
+  updateMemberSchema,
+  updateMemberStatusSchema,
+};

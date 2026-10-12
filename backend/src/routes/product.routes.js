@@ -2,7 +2,7 @@ const { Router } = require("express");
 const productController = require("../controllers/product.controller.js");
 const validate = require("../middlewares/validate.middleware.js");
 const authenticate = require("../middlewares/auth.middleware.js");
-const authorize = require("../middlewares/role.middleware.js");
+const { authorize } = require("../middlewares/role.middleware.js");
 const {
   createProductSchema,
   updateProductSchema,

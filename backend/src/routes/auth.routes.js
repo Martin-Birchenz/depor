@@ -3,7 +3,7 @@ const authController = require("../controllers/auth.controller.js");
 const validate = require("../middlewares/validate.middleware.js");
 const authenticate = require("../middlewares/auth.middleware.js");
 const { optionalAuthenticate } = require("../middlewares/auth.middleware.js");
-const authorize = require("../middlewares/role.middleware.js");
+const { authorize } = require("../middlewares/role.middleware.js");
 const {
   loginSchema,
   registerUserSchema,

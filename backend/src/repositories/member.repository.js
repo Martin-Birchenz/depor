@@ -56,6 +56,25 @@ class MemberRepository {
     const [rows] = await pool.execute(query, params);
     return rows;
   }
+  async updateStatus(id, status) {
+    const query = `
+      UPDATE members
+      SET status = ?
+      WHERE idmembers = ?
+    `;
+    const [result] = await pool.execute(query, [status, id]);
+    return result.affectedRows > 0;
+  }
+  async findById(id) {
+    const query = `
+      SELECT idmembers, dni, first_name, last_name, phone, email, status, member_number, created_at 
+      FROM members 
+      WHERE idmembers = ? 
+      LIMIT 1
+    `;
+    const [rows] = await pool.execute(query, [id]);
+    return rows[0] || null;
+  }
 }
 
 module.exports = new MemberRepository();

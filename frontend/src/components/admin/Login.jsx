@@ -3,6 +3,30 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { loginAdmin } from "../../service/auth.service";
 
+const getRedirectPathByRole = (role) => {
+  switch (role) {
+    case "tenis":
+      return "/admin/tenis";
+    case "padel":
+      return "/admin/padel";
+    case "pelota_paleta":
+      return "/admin/pelota-paleta";
+    case "salon":
+      return "/admin/salon";
+    case "cantina":
+      return "/admin/cantina";
+    case "tienda":
+      return "/admin/indumentaria";
+    case "secretaria":
+      return "/admin/socios";
+    case "juveniles":
+      return "/admin/infantiles";
+    case "adminBirchenz":
+    default:
+      return "/admin";
+  }
+};
+
 export default function Login() {
   const [credentials, setCredentials] = useState({ email: "", password: "" });
   const [loading, setLoading] = useState(false);
@@ -24,7 +48,11 @@ export default function Login() {
     try {
       const data = await loginAdmin(credentials);
       login(data.user, data.token);
-      navigate("/admin");
+
+      const role = data.user?.role || data.user?.roleName || "";
+
+      const redirectPath = getRedirectPathByRole(role);
+      navigate(redirectPath, { replace: true });
     } catch (err) {
       setErrorMsg(
         err.response?.data?.message ||

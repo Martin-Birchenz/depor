@@ -2,7 +2,7 @@ const { Router } = require("express");
 const memberController = require("../controllers/member.controller.js");
 const validate = require("../middlewares/validate.middleware.js");
 const authenticate = require("../middlewares/auth.middleware.js");
-const authorize = require("../middlewares/role.middleware.js");
+const { authorize } = require("../middlewares/role.middleware.js");
 const {
   createMemberSchema,
   updateMemberSchema,

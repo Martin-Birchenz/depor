@@ -5,8 +5,12 @@ import {
   createYouthPlayer,
   updateYouthPlayerStatus,
 } from "../../service/youth.service";
+import { useToast } from "../../hooks/useToast";
+import LoadingSpinner from "../../components/common/LoadingSpinner";
 
 export default function AdminInfantiles() {
+  const { addToast } = useToast();
+
   const [categories, setCategories] = useState([]);
   const [players, setPlayers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -107,10 +111,10 @@ export default function AdminInfantiles() {
         guardianPhone: "",
       });
       loadData();
+      addToast("Ficha registrada con éxito", "success");
     } catch (error) {
-      setFeedbackMsg(
-        error.response?.data?.message || "Error al inscribir al jugador.",
-      );
+      console.error(error);
+      addToast("Error al inscribir al jugador.", "error");
     } finally {
       setSubmitting(false);
     }
@@ -195,14 +199,7 @@ export default function AdminInfantiles() {
             </thead>
             <tbody>
               {loading ? (
-                <tr>
-                  <td colSpan="7" className="text-center py-5">
-                    <div
-                      className="spinner-border text-dark"
-                      role="status"
-                    ></div>
-                  </td>
-                </tr>
+                <LoadingSpinner message="Cargando jugadores..." />
               ) : filteredPlayers.length === 0 ? (
                 <tr>
                   <td colSpan="7" className="text-center py-5 text-muted">

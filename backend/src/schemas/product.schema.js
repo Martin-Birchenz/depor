@@ -19,8 +19,11 @@ const updateProductSchema = createProductSchema
   .partial()
   .omit({ variants: true });
 
-const updatedVariantStockSchema = z.object({
-  stock: z.number({ required_error: "Stock is required" }).int().nonnegative(),
+const updateVariantStockSchema = z.object({
+  stock: z
+    .number()
+    .int()
+    .nonnegative("El stock debe ser un entero no negativo"),
 });
 
 const addVariantSchema = variantItemSchema;
@@ -28,6 +31,6 @@ const addVariantSchema = variantItemSchema;
 module.exports = {
   createProductSchema,
   updateProductSchema,
-  updatedVariantStockSchema,
+  updateVariantStockSchema,
   addVariantSchema,
 };

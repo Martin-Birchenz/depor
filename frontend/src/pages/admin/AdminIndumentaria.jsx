@@ -1,7 +1,15 @@
 import { useEffect, useState } from "react";
-import { getProducts, updateProduct } from "../../service/product.service";
+import {
+  getProducts,
+  updateProduct,
+  updateVariantStock,
+} from "../../service/product.service";
+import { useToast } from "../../hooks/useToast";
+import LoadingSpinner from "../../components/common/LoadingSpinner";
 
 export default function AdminIndumentaria() {
+  const { addToast } = useToast();
+
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -9,7 +17,7 @@ export default function AdminIndumentaria() {
   const [editForm, setEditForm] = useState({
     price: "",
     memberPrice: "",
-    inStock: true,
+    variants: [],
   });
   const [submitting, setSubmitting] = useState(false);
 
@@ -40,8 +48,19 @@ export default function AdminIndumentaria() {
     setEditForm({
       price: product.price,
       memberPrice: product.member_price || product.memberPrice || "",
-      inStock: product.in_stock ?? product.inStock ?? true,
+      variants: product.variants ? product.variants.map((v) => ({ ...v })) : [],
     });
+  };
+
+  const handleVariantStockChange = (variantId, newStock) => {
+    setEditForm((prev) => ({
+      ...prev,
+      variants: prev.variants.map((v) =>
+        v.idproducts_variants === variantId
+          ? { ...v, stock: Number(newStock) }
+          : v,
+      ),
+    }));
   };
 
   const handleSaveEdit = async (id) => {
@@ -50,8 +69,15 @@ export default function AdminIndumentaria() {
       await updateProduct(id, {
         price: Number(editForm.price),
         memberPrice: Number(editForm.memberPrice),
-        inStock: Boolean(editForm.inStock),
       });
+
+      if (editForm.variants && editForm.variants.length > 0) {
+        await Promise.all(
+          editForm.variants.map((v) =>
+            updateVariantStock(v.idproducts_variants, v.stock),
+          ),
+        );
+      }
 
       setProducts((prev) =>
         prev.map((p) => {
@@ -61,15 +87,19 @@ export default function AdminIndumentaria() {
               ...p,
               price: editForm.price,
               member_price: editForm.memberPrice,
-              in_stock: editForm.inStock,
+              variants: editForm.variants,
             };
           }
           return p;
         }),
       );
       setEditingId(null);
+      addToast("Producto actualizado con éxito", "success");
     } catch (err) {
-      alert(err.response?.data?.message || "Error al actualizar el producto.");
+      addToast(
+        err.response?.data?.message || "Error al actualizar el producto.",
+        "error",
+      );
     } finally {
       setSubmitting(false);
     }
@@ -85,8 +115,8 @@ export default function AdminIndumentaria() {
         <div>
           <h2 className="fw-bold mb-1">Tienda e Indumentaria</h2>
           <p className="text-muted small mb-0">
-            Control de stock, precios generales y bonificaciones para socios de
-            El Depor.
+            Control de stock por talle, precios generales y descuentos para
+            socios.
           </p>
         </div>
       </div>
@@ -116,20 +146,13 @@ export default function AdminIndumentaria() {
                 <th className="ps-4">Prenda</th>
                 <th>Precio General</th>
                 <th>Precio Socio</th>
-                <th>Estado Stock</th>
+                <th>Stock por Talles</th>
                 <th className="text-end pe-4">Acciones</th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
-                <tr>
-                  <td colSpan="5" className="text-center py-5">
-                    <div
-                      className="spinner-border text-dark"
-                      role="status"
-                    ></div>
-                  </td>
-                </tr>
+                <LoadingSpinner message="Cargando indumentaria..." />
               ) : filteredProducts.length === 0 ? (
                 <tr>
                   <td colSpan="5" className="text-center py-5 text-muted">
@@ -140,7 +163,10 @@ export default function AdminIndumentaria() {
                 filteredProducts.map((p) => {
                   const id = p.id || p.idproducts;
                   const isEditing = editingId === id;
-                  const inStock = p.in_stock ?? p.inStock ?? true;
+                  const totalStock = (p.variants || []).reduce(
+                    (acc, v) => acc + Number(v.stock || 0),
+                    0,
+                  );
 
                   return (
                     <tr key={id}>
@@ -160,7 +186,7 @@ export default function AdminIndumentaria() {
                             <div className="fw-bold text-dark">{p.name}</div>
                             <div
                               className="text-muted small text-truncate"
-                              style={{ maxWidth: "250px" }}
+                              style={{ maxWidth: "220px" }}
                             >
                               {p.description}
                             </div>
@@ -213,28 +239,44 @@ export default function AdminIndumentaria() {
 
                       <td>
                         {isEditing ? (
-                          <div className="form-check form-switch">
-                            <input
-                              className="form-check-input"
-                              type="checkbox"
-                              checked={editForm.inStock}
-                              onChange={(e) =>
-                                setEditForm({
-                                  ...editForm,
-                                  inStock: e.target.checked,
-                                })
-                              }
-                            />
-                            <label className="form-check-label small">
-                              {editForm.inStock ? "Disponible" : "Sin Stock"}
-                            </label>
+                          <div className="d-flex flex-wrap gap-2">
+                            {editForm.variants.map((v) => (
+                              <div
+                                key={v.idproducts_variants}
+                                className="d-flex align-items-center gap-1 border rounded p-1 bg-light"
+                              >
+                                <span className="small fw-bold">{v.size}:</span>
+                                <input
+                                  type="number"
+                                  min="0"
+                                  style={{ width: "55px" }}
+                                  className="form-control form-control-sm py-0 px-1"
+                                  value={v.stock}
+                                  onChange={(e) =>
+                                    handleVariantStockChange(
+                                      v.idproducts_variants,
+                                      e.target.value,
+                                    )
+                                  }
+                                />
+                              </div>
+                            ))}
                           </div>
                         ) : (
-                          <span
-                            className={`badge ${inStock ? "bg-success" : "bg-secondary"}`}
-                          >
-                            {inStock ? "En Stock" : "Sin Stock"}
-                          </span>
+                          <div>
+                            <span
+                              className={`badge ${totalStock > 0 ? "bg-success" : "bg-secondary"} mb-1`}
+                            >
+                              {totalStock > 0
+                                ? `${totalStock} en stock`
+                                : "Agotado"}
+                            </span>
+                            <div className="small text-muted">
+                              {(p.variants || [])
+                                .map((v) => `${v.size}: ${v.stock}`)
+                                .join(" | ")}
+                            </div>
+                          </div>
                         )}
                       </td>
 

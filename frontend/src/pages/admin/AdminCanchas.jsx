@@ -103,11 +103,31 @@ export default function AdminCanchas() {
     setFeedbackMsg(null);
 
     try {
-      await createBookingAdmin({
-        ...newBooking,
+      const [hours, minutes] = newBooking.startTime.split(":").map(Number);
+      const totalMinutes =
+        hours * 60 + minutes + Number(newBooking.durationMinutes || 60);
+      const endHours = String(Math.floor(totalMinutes / 60) % 24).padStart(
+        2,
+        "0",
+      );
+      const endMins = String(totalMinutes % 60).padStart(2, "0");
+      const calculatedEndTime = `${endHours}:${endMins}`;
+
+      const payload = {
         facilityId: Number(newBooking.facilityId),
-        depositPaid: Number(newBooking.depositPaid),
-      });
+        reservationDate: newBooking.date,
+        startTime: newBooking.startTime,
+        endTime: calculatedEndTime,
+        clientName: newBooking.clientName.trim(),
+        clientPhone: newBooking.clientPhone.trim(),
+        isMember: Boolean(newBooking.isMember),
+        finalPrice: Number(newBooking.depositPaid || 0),
+        depositPaid: Number(newBooking.depositPaid || 0),
+        status: "confirmado",
+      };
+
+      await createBookingAdmin(payload);
+
       setShowModal(false);
       setNewBooking({
         facilityId: facilities[0]?.id || facilities[0]?.idfacilities || "",
@@ -121,8 +141,11 @@ export default function AdminCanchas() {
       });
       refreshData();
     } catch (error) {
+      console.error(error);
       setFeedbackMsg(
-        error.response?.data?.message || "Error al guardar la reserva.",
+        error.response?.data?.message ||
+          error.response?.data?.errors?.[0]?.message ||
+          "Error al guardar la reserva.",
       );
     } finally {
       setSubmitting(false);
@@ -145,8 +168,7 @@ export default function AdminCanchas() {
         <div>
           <h2 className="fw-bold mb-1">Turnero de Canchas</h2>
           <p className="text-muted small mb-0">
-            Control diario de ocupación, reservas de socios y alquiler de
-            canchas.
+            Control diario de ocupación y reservas por disciplina.
           </p>
         </div>
         <button
@@ -157,11 +179,40 @@ export default function AdminCanchas() {
         </button>
       </div>
 
+      <div className="card border-0 shadow-sm p-2 mb-3 bg-white">
+        <ul className="nav nav-pills nav-fill gap-2">
+          <li className="nav-item">
+            <button
+              type="button"
+              className={`nav-link fw-bold ${selectedFacility === "todas" ? "active bg-black text-white" : "text-dark"}`}
+              onClick={() => setSelectedFacility("todas")}
+            >
+              Todas las Canchas
+            </button>
+          </li>
+          {facilities.map((f) => {
+            const fId = String(f.id || f.idfacilities);
+            const isSelected = String(selectedFacility) === fId;
+            return (
+              <li className="nav-item" key={fId}>
+                <button
+                  type="button"
+                  className={`nav-link fw-bold ${isSelected ? "active bg-black text-white" : "text-dark"}`}
+                  onClick={() => setSelectedFacility(fId)}
+                >
+                  {f.name}
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      </div>
+
       <div className="card border-0 shadow-sm p-3 mb-4 bg-white">
         <div className="row g-3 align-items-center">
-          <div className="col-12 col-md-4">
+          <div className="col-12 col-md-6">
             <label className="form-label small fw-bold text-muted mb-1">
-              Fecha
+              Fecha de Visualización
             </label>
             <input
               type="date"
@@ -170,29 +221,9 @@ export default function AdminCanchas() {
               onChange={(e) => setSelectedDate(e.target.value)}
             />
           </div>
-          <div className="col-12 col-md-4">
+          <div className="col-12 col-md-6">
             <label className="form-label small fw-bold text-muted mb-1">
-              Instalación
-            </label>
-            <select
-              className="form-select"
-              value={selectedFacility}
-              onChange={(e) => setSelectedFacility(e.target.value)}
-            >
-              <option value="todas">Todas las canchas</option>
-              {facilities.map((f) => {
-                const fId = f.id || f.idfacilities;
-                return (
-                  <option key={fId} value={fId}>
-                    {f.name}
-                  </option>
-                );
-              })}
-            </select>
-          </div>
-          <div className="col-12 col-md-4">
-            <label className="form-label small fw-bold text-muted mb-1">
-              Estado
+              Filtrar por Estado
             </label>
             <select
               className="form-select"
@@ -236,8 +267,8 @@ export default function AdminCanchas() {
               ) : filteredBookings.length === 0 ? (
                 <tr>
                   <td colSpan="8" className="text-center py-5 text-muted">
-                    No hay turnos registrados para esta fecha y filtros
-                    seleccionados.
+                    No hay turnos registrados en este espacio para la fecha
+                    seleccionada.
                   </td>
                 </tr>
               ) : (
@@ -351,7 +382,7 @@ export default function AdminCanchas() {
                   <div className="row g-3">
                     <div className="col-12">
                       <label className="form-label small fw-bold">
-                        Instalación *
+                        Instalación / Deporte *
                       </label>
                       <select
                         className="form-select form-select-sm"

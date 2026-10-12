@@ -2,7 +2,11 @@ const pool = require("../config/db.js");
 
 class CampRegistrationRepository {
   async create(data) {
-    const query = `INSERT INTO camp_registrations (minor_full_name, minor_birth_date, guardian_name, guardian_phone, medical_notes, status) VALUES (?, ?, ?, ?, ?, 'pendiente')`;
+    const query = `
+      INSERT INTO camp_registrations 
+        (minor_full_name, minor_birth_date, guardian_name, guardian_phone, medical_notes, status, shift, is_member) 
+      VALUES (?, ?, ?, ?, ?, 'confirmado', ?, ?)
+    `;
 
     const [result] = await pool.execute(query, [
       data.minorFullName,
@@ -10,20 +14,24 @@ class CampRegistrationRepository {
       data.guardianName,
       data.guardianPhone,
       data.medicalNotes || null,
+      data.shift || "mañana",
+      data.isMember ? 1 : 0,
     ]);
 
     return result.insertId;
   }
   async findAll({ status, search }) {
     let query = `SELECT
-    idcamp_registrations,
-    minor_full_name,
-    minor_birth_date,
-    guardian_name,
-    guardian_phone,
-    medical_notes,
-    status,
-    created_at
+      idcamp_registrations,
+      minor_full_name,
+      minor_birth_date,
+      guardian_name,
+      guardian_phone,
+      medical_notes,
+      shift,
+      is_member,
+      status,
+      created_at
     FROM camp_registrations WHERE 1=1`;
 
     const params = [];
@@ -42,7 +50,6 @@ class CampRegistrationRepository {
     query += ` ORDER BY created_at DESC`;
 
     const [rows] = await pool.execute(query, params);
-
     return rows;
   }
   async findById(id) {
@@ -50,13 +57,13 @@ class CampRegistrationRepository {
     const [rows] = await pool.execute(query, [id]);
     return rows[0] || null;
   }
-  async updateStatus(id, updateData) {
+  async updateStatus(id, status) {
     const query = `
         UPDATE camp_registrations
         SET status = ?
         WHERE idcamp_registrations = ?
     `;
-    const [result] = await pool.execute(query, [updateData.status, id]);
+    const [result] = await pool.execute(query, [status, id]);
     return result.affectedRows > 0;
   }
 }

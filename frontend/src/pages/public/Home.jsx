@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { getProducts } from "../../service/product.service.js";
 import ProductCard from "../../components/common/ProductCard";
+import ProductDetailModal from "../../components/common/ProductDetailModal";
+import LoadingSpinner from "../../components/common/LoadingSpinner";
 
 import hinchada from "../../assets/hinchada-cdn.jpg";
 import futbol from "../../assets/futbol-cdn.jpg";
@@ -15,6 +17,8 @@ import infantiles from "../../assets/infantiles.jpg";
 export default function Home() {
   const [featuredProducts, setFeaturedProducts] = useState([]);
   const [loadingProducts, setLoadingProducts] = useState(true);
+
+  const [selectedProduct, setSelectedProduct] = useState(null);
 
   useEffect(() => {
     const fetchHomeProducts = async () => {
@@ -89,14 +93,8 @@ export default function Home() {
               { name: "Fútbol", img: futbol },
               { name: "Tenis", img: tenis },
               { name: "Pádel", img: padel },
-              {
-                name: "Pelota Paleta",
-                img: paleta,
-              },
-              {
-                name: "Natación y Colonia",
-                img: natacion,
-              },
+              { name: "Pelota Paleta", img: paleta },
+              { name: "Natación y Colonia", img: natacion },
               { name: "Fútbol 5", img: futbol5 },
             ].map((sport, index) => (
               <div key={index} className="col-6 col-md-4">
@@ -189,15 +187,15 @@ export default function Home() {
           <h2 className="section-title">Indumentaria Oficial</h2>
 
           {loadingProducts ? (
-            <div className="text-center py-5">
-              <div className="spinner-border text-dark" role="status">
-                <span className="visually-hidden">Cargando catálogo...</span>
-              </div>
-            </div>
+            <LoadingSpinner message="Cargando indumentaria..." />
           ) : featuredProducts.length > 0 ? (
             <div className="row g-4 justify-content-center">
               {featuredProducts.map((product) => (
-                <ProductCard key={product.idproducts} product={product} />
+                <ProductCard
+                  key={product.idproducts}
+                  product={product}
+                  onSelectDetail={(p) => setSelectedProduct(p)}
+                />
               ))}
             </div>
           ) : (
@@ -211,6 +209,13 @@ export default function Home() {
               Ver catálogo completo
             </Link>
           </div>
+
+          {selectedProduct && (
+            <ProductDetailModal
+              product={selectedProduct}
+              onClose={() => setSelectedProduct(null)}
+            />
+          )}
         </div>
       </section>
 

@@ -1,30 +1,47 @@
 import { Navigate, Outlet } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 
+const getDefaultRoute = (role) => {
+  switch (role) {
+    case "tenis":
+      return "/admin/tenis";
+    case "padel":
+      return "/admin/padel";
+    case "pelota_paleta":
+      return "/admin/pelota-paleta";
+    case "salon":
+      return "/admin/salon";
+    case "cantina":
+      return "/admin/cantina";
+    case "tienda":
+      return "/admin/indumentaria";
+    case "juveniles":
+      return "/admin/infantiles";
+    case "secretaria":
+    case "adminBirchenz":
+    default:
+      return "/admin";
+  }
+};
+
 export default function ProtectedRoute({ allowedRoles = [] }) {
-  const { user, token, loading } = useAuth();
+  const { user, loading } = useAuth();
 
   if (loading) {
-    return (
-      <div className="min-vh-100 d-flex justify-content-center align-items-center">
-        <div className="spinner-border text-dark" role="status"></div>
-      </div>
-    );
+    return <div className="text-center p-5">Cargando permisos...</div>;
   }
 
-  if (!token || !user) {
+  if (!user) {
     return <Navigate to="/admin/login" replace />;
   }
 
-  if (allowedRoles.length > 0 && !allowedRoles.includes(user.role)) {
-    return (
-      <div className="container py-5 text-center">
-        <h2 className="text-danger fw-bold">Acceso Denegado</h2>
-        <p className="text-muted">
-          Tu rol ({user.role}) no tiene permisos para acceder a este módulo.
-        </p>
-      </div>
-    );
+  const role = user.role || user.roleName || "";
+  const isSuperAdmin = role === "adminBirchenz";
+  const hasAccess =
+    isSuperAdmin || allowedRoles.length === 0 || allowedRoles.includes(role);
+
+  if (!hasAccess) {
+    return <Navigate to={getDefaultRoute(role)} replace />;
   }
 
   return <Outlet />;

@@ -21,6 +21,9 @@ const createCampRegistrationSchema = z.object({
     .min(6, { message: "Guardian phone must be at least 6 characters long" })
     .max(50)
     .trim(),
+  guardianEmail: z.string().email().optional().nullable().or(z.literal("")),
+  shift: z.enum(["mañana", "tarde"]).default("mañana"),
+  isMember: z.boolean().optional().default(false),
   medicalNotes: z.string().max(255).optional().nullable(),
 });
 

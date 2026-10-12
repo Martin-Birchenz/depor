@@ -19,10 +19,13 @@ import Login from "./components/admin/Login";
 import Dashboard from "./components/admin/Dashboard";
 import AdminSocios from "./pages/admin/AdminSocios";
 import AdminColonia from "./pages/admin/AdminColonia.jsx";
-import AdminCanchas from "./pages/admin/AdminCanchas.jsx";
 import AdminIndumentaria from "./pages/admin/AdminIndumentaria.jsx";
 import AdminCantina from "./pages/admin/AdminCantina.jsx";
 import AdminInfantiles from "./pages/admin/AdminInfantiles.jsx";
+import AdminTenis from "./pages/admin/AdminTenis.jsx";
+import AdminPadel from "./pages/admin/AdminPadel.jsx";
+import AdminPelotaPaleta from "./pages/admin/AdminPelotaPaleta.jsx";
+import AdminSalon from "./pages/admin/AdminSalon.jsx";
 
 function PublicLayout() {
   return (
@@ -56,16 +59,56 @@ export default function App() {
 
           <Route element={<ProtectedRoute />}>
             <Route element={<AdminLayout />}>
-              <Route path="/admin" element={<Dashboard />} />
-              <Route path="/admin/socios" element={<AdminSocios />} />
-              <Route path="/admin/colonia" element={<AdminColonia />} />
-              <Route path="/admin/canchas" element={<AdminCanchas />} />
-              <Route path="/admin/cantina" element={<AdminCantina />} />
-              <Route path="/admin/infantiles" element={<AdminInfantiles />} />
               <Route
-                path="/admin/indumentaria"
-                element={<AdminIndumentaria />}
-              />
+                element={
+                  <ProtectedRoute
+                    allowedRoles={["adminBirchenz", "secretaria"]}
+                  />
+                }
+              >
+                <Route path="/admin" element={<Dashboard />} />
+              </Route>
+
+              <Route element={<ProtectedRoute allowedRoles={["secretaria"]} />}>
+                <Route path="/admin/socios" element={<AdminSocios />} />
+                <Route path="/admin/colonia" element={<AdminColonia />} />
+              </Route>
+
+              <Route element={<ProtectedRoute allowedRoles={["tenis"]} />}>
+                <Route path="/admin/tenis" element={<AdminTenis />} />
+              </Route>
+
+              <Route element={<ProtectedRoute allowedRoles={["padel"]} />}>
+                <Route path="/admin/padel" element={<AdminPadel />} />
+              </Route>
+
+              <Route
+                element={<ProtectedRoute allowedRoles={["pelota_paleta"]} />}
+              >
+                <Route
+                  path="/admin/pelota-paleta"
+                  element={<AdminPelotaPaleta />}
+                />
+              </Route>
+
+              <Route element={<ProtectedRoute allowedRoles={["salon"]} />}>
+                <Route path="/admin/salon" element={<AdminSalon />} />
+              </Route>
+
+              <Route element={<ProtectedRoute allowedRoles={["tienda"]} />}>
+                <Route
+                  path="/admin/indumentaria"
+                  element={<AdminIndumentaria />}
+                />
+              </Route>
+
+              <Route element={<ProtectedRoute allowedRoles={["cantina"]} />}>
+                <Route path="/admin/cantina" element={<AdminCantina />} />
+              </Route>
+
+              <Route element={<ProtectedRoute allowedRoles={["juveniles"]} />}>
+                <Route path="/admin/infantiles" element={<AdminInfantiles />} />
+              </Route>
             </Route>
           </Route>
         </Routes>

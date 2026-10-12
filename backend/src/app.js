@@ -10,6 +10,11 @@ const campRegistrationRoutes = require("./routes/campRegistration.routes.js");
 const productRoutes = require("./routes/product.routes.js");
 const youthRoutes = require("./routes/youth.routes.js");
 const canteenRoutes = require("./routes/canteen.routes.js");
+const tennisRoutes = require("./routes/tennis.routes.js");
+const padelRoutes = require("./routes/padel.routes.js");
+const pelotaPaletaRoutes = require("./routes/pelotaPaleta.routes.js");
+const salonRoutes = require("./routes/salon.routes.js");
+const dashboardRoutes = require("./routes/dashboard.routes.js");
 
 const app = express();
 
@@ -29,6 +34,11 @@ app.use("/api/camp-registrations", campRegistrationRoutes);
 app.use("/api/products", productRoutes);
 app.use("/api/youth", youthRoutes);
 app.use("/api/canteen", canteenRoutes);
+app.use("/api/tennis", tennisRoutes);
+app.use("/api/padel", padelRoutes);
+app.use("/api/pelota-paleta", pelotaPaletaRoutes);
+app.use("/api/salon", salonRoutes);
+app.use("/api/dashboard", dashboardRoutes);
 
 app.use(errorHandler);
 

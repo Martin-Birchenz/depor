@@ -14,3 +14,10 @@ export const createProduct = async (productData) => {
   const response = await api.post("/products", productData);
   return response.data.data;
 };
+
+export const updateVariantStock = async (variantId, stock) => {
+  const response = await api.patch(`/products/variants/${variantId}/stock`, {
+    stock,
+  });
+  return response.data.data;
+};

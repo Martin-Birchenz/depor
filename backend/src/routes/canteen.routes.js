@@ -2,7 +2,7 @@ const { Router } = require("express");
 const canteenController = require("../controllers/canteen.controller.js");
 const validate = require("../middlewares/validate.middleware.js");
 const authenticate = require("../middlewares/auth.middleware.js");
-const authorize = require("../middlewares/role.middleware.js");
+const { authorize } = require("../middlewares/role.middleware.js");
 const { createCanteenSaleSchema } = require("../schemas/canteen.schema.js");
 
 const router = Router();
@@ -23,8 +23,15 @@ router.put("/products/:id", (req, res, next) =>
 router.get("/sales", (req, res, next) =>
   canteenController.getSales(req, res, next),
 );
+router.get("/summary", (req, res, next) =>
+  canteenController.getDailySummary(req, res, next),
+);
 router.post("/sales", validate(createCanteenSaleSchema), (req, res, next) =>
   canteenController.recordSale(req, res, next),
+);
+
+router.post("/close-session", (req, res, next) =>
+  canteenController.closeDailySession(req, res, next),
 );
 
 module.exports = router;

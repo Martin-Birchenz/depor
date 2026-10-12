@@ -2,7 +2,7 @@ const { Router } = require("express");
 const campRegistrationController = require("../controllers/campRegistration.controller");
 const validate = require("../middlewares/validate.middleware");
 const authenticate = require("../middlewares/auth.middleware");
-const authorize = require("../middlewares/role.middleware");
+const { authorize } = require("../middlewares/role.middleware");
 const {
   createCampRegistrationSchema,
   updateCampRegistrationStatusSchema,

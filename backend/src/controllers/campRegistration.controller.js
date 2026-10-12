@@ -37,7 +37,7 @@ class CampRegistrationController {
       const { id } = req.params;
       const { status } = req.body;
       const updated = await campRegistrationService.updateStatus(id, status);
-      return sendSucces(
+      return sendSuccess(
         res,
         updated,
         "Registration status updated successfully",

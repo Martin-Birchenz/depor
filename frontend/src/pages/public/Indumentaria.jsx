@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { getProducts } from "../../service/product.service.js";
 import ProductCard from "../../components/common/ProductCard";
 import ProductDetailModal from "../../components/common/ProductDetailModal";
+import LoadingSpinner from "../../components/common/LoadingSpinner";
 
 export default function Indumentaria() {
   const [products, setProducts] = useState([]);
@@ -79,11 +80,7 @@ export default function Indumentaria() {
         </div>
 
         {loading ? (
-          <div className="text-center py-5">
-            <div className="spinner-border text-dark" role="status">
-              <span className="visually-hidden">Cargando indumentaria...</span>
-            </div>
-          </div>
+          <LoadingSpinner message="Cargando indumentaria..." />
         ) : filteredProducts.length > 0 ? (
           <div className="row g-4">
             {filteredProducts.map((product) => (
@@ -104,7 +101,7 @@ export default function Indumentaria() {
 
         <div className="alert alert-dark mt-5 text-center p-4 border-0 shadow-sm">
           <h5 className="fw-bold mb-2">¿Cómo adquirir tu indumentaria?</h5>
-          <p className="mb-0 text-white-50">
+          <p className="mb-0 text-dark-50">
             Consultá disponibilidad o reservá tu talle directamente en la
             secretaría del club o coordinando por WhatsApp con los encargados de
             la tienda.

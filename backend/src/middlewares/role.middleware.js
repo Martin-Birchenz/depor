@@ -1,27 +1,29 @@
-const authorize = (allowedRoles = []) => {
+const authorize = (...allowedRoles) => {
+  const roles = Array.isArray(allowedRoles[0]) ? allowedRoles[0] : allowedRoles;
+
   return (req, res, next) => {
-    try {
-      if (!req.user) {
-        const error = new Error("Unauthorized");
-        error.statusCode = 401;
-        throw error;
-      }
-
-      if (req.user.role === "adminBirchenz") {
-        return next();
-      }
-
-      if (!allowedRoles.includes(req.user.role)) {
-        const error = new Error("Unauthorized");
-        error.statusCode = 403;
-        throw error;
-      }
-
-      next();
-    } catch (error) {
-      next(error);
+    if (!req.user || !req.user.role) {
+      return res
+        .status(401)
+        .json({ message: "No autenticado o rol no asignado" });
     }
+
+    if (req.user.role === "adminBirchenz") {
+      return next();
+    }
+
+    if (!roles.includes(req.user.role)) {
+      return res.status(403).json({
+        message:
+          "Acceso denegado: no tenés permisos para gestionar este módulo",
+      });
+    }
+
+    next();
   };
 };
 
-module.exports = authorize;
+module.exports = {
+  authorize,
+  authorizeRoles: authorize,
+};

@@ -4,8 +4,11 @@ import {
   registerMember,
   updateMemberStatus,
 } from "../../service/member.service";
+import { useToast } from "../../hooks/useToast";
+import LoadingSpinner from "../../components/common/LoadingSpinner";
 
 export default function AdminSocios() {
+  const { addToast } = useToast();
   const [members, setMembers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -19,7 +22,7 @@ export default function AdminSocios() {
     dni: "",
     email: "",
     phone: "",
-    category: "activo",
+    category: "general",
   });
   const [feedbackMsg, setFeedbackMsg] = useState(null);
 
@@ -67,7 +70,9 @@ export default function AdminSocios() {
     const dni = String(m.dni || "");
     const matchesSearch =
       fullName.includes(search.toLowerCase()) || dni.includes(search);
-    const matchesStatus = statusFilter === "todos" || m.status === statusFilter;
+    const memberStatus = m.status || "active";
+    const matchesStatus =
+      statusFilter === "todos" || memberStatus === statusFilter;
     return matchesSearch && matchesStatus;
   });
 
@@ -79,8 +84,9 @@ export default function AdminSocios() {
           m.idmembers === id || m.id === id ? { ...m, status: newStatus } : m,
         ),
       );
+      addToast("Estado actualizado con éxito", "success");
     } catch (error) {
-      alert("Error al actualizar el estado del socio.");
+      addToast("Error al actualizar el estado del socio.", "error");
       console.log("Error al actualizar el estado del socio:", error);
     }
   };
@@ -102,10 +108,10 @@ export default function AdminSocios() {
         category: "activo",
       });
       fetchSocios();
+      addToast("Socio registrado con éxito", "success");
     } catch (error) {
-      setFeedbackMsg(
-        error.response?.data?.message || "Error al guardar el socio.",
-      );
+      addToast("Error al guardar el socio.", "error");
+      console.error(error);
     } finally {
       setSubmitting(false);
     }
@@ -147,9 +153,9 @@ export default function AdminSocios() {
               onChange={(e) => setStatusFilter(e.target.value)}
             >
               <option value="todos">Todos los estados</option>
-              <option value="activo">Activos</option>
-              <option value="pendiente">Pendientes</option>
-              <option value="inactivo">Inactivos / Bajas</option>
+              <option value="active">Al Día / Activos</option>
+              <option value="debtor">Deudores</option>
+              <option value="inactive">Inactivos</option>
             </select>
           </div>
           <div className="col-12 col-md-2 text-md-end text-muted small">
@@ -173,14 +179,7 @@ export default function AdminSocios() {
             </thead>
             <tbody>
               {loading ? (
-                <tr>
-                  <td colSpan="6" className="text-center py-5">
-                    <div
-                      className="spinner-border text-dark"
-                      role="status"
-                    ></div>
-                  </td>
-                </tr>
+                <LoadingSpinner message="Cargando socios..." />
               ) : filteredMembers.length === 0 ? (
                 <tr>
                   <td colSpan="6" className="text-center py-5 text-muted">
@@ -209,14 +208,18 @@ export default function AdminSocios() {
                       <td>
                         <span
                           className={`badge ${
-                            currentStatus === "activo"
+                            currentStatus === "active"
                               ? "bg-success"
-                              : currentStatus === "pendiente"
-                                ? "bg-warning text-dark"
-                                : "bg-danger"
+                              : currentStatus === "debtor"
+                                ? "bg-danger"
+                                : "bg-secondary"
                           }`}
                         >
-                          {currentStatus}
+                          {currentStatus === "active"
+                            ? "Al Día"
+                            : currentStatus === "debtor"
+                              ? "Deudor"
+                              : "Inactivo"}
                         </span>
                       </td>
                       <td className="text-end pe-4">
@@ -227,9 +230,9 @@ export default function AdminSocios() {
                             handleStatusChange(id, e.target.value)
                           }
                         >
-                          <option value="activo">Activo</option>
-                          <option value="pendiente">Pendiente</option>
-                          <option value="inactivo">Inactivo</option>
+                          <option value="active">Al Día</option>
+                          <option value="debtor">Deudor</option>
+                          <option value="inactive">Inactivo</option>
                         </select>
                       </td>
                     </tr>
@@ -352,9 +355,10 @@ export default function AdminSocios() {
                           })
                         }
                       >
-                        <option value="activo">Socio Activo</option>
+                        <option value="general">Socio General</option>
                         <option value="cadete">Cadete / Juvenil</option>
                         <option value="familiar">Grupo Familiar</option>
+                        <option value="vitalicio">Vitalicio</option>
                       </select>
                     </div>
                   </div>

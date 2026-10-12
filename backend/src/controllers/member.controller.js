@@ -28,6 +28,21 @@ class MemberController {
       next(error);
     }
   }
+  async updateStatus(req, res, next) {
+    try {
+      const { id } = req.params;
+      const { status } = req.body;
+      const updated = await memberService.updateMemberStatus(id, status);
+      return sendSuccess(
+        res,
+        updated,
+        "Member status updated successfully",
+        200,
+      );
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 
 module.exports = new MemberController();

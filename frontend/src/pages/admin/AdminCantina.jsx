@@ -1,12 +1,18 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import {
   getCanteenProducts,
   createCanteenProduct,
   getCanteenSales,
+  getCanteenSummary,
+  closeCanteenSession,
   recordCanteenSale,
 } from "../../service/canteen.service";
+import { useToast } from "../../hooks/useToast";
+import LoadingSpinner from "../../components/common/LoadingSpinner";
 
 export default function AdminCantina() {
+  const { addToast } = useToast();
+
   const [products, setProducts] = useState([]);
   const [sales, setSales] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -16,6 +22,9 @@ export default function AdminCantina() {
   const [submittingSale, setSubmittingSale] = useState(false);
 
   const [showProductModal, setShowProductModal] = useState(false);
+  const [showSummaryModal, setShowSummaryModal] = useState(false);
+  const [dailySummary, setDailySummary] = useState(null);
+
   const [newProd, setNewProd] = useState({
     name: "",
     category: "comida",
@@ -23,7 +32,7 @@ export default function AdminCantina() {
     stock: 0,
   });
 
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
       const [prodData, salesData] = await Promise.all([
         getCanteenProducts(),
@@ -36,39 +45,18 @@ export default function AdminCantina() {
     } finally {
       setLoading(false);
     }
-  };
-
-  useEffect(() => {
-    let isMounted = true;
-
-    const fetchData = async () => {
-      try {
-        const [prodData, salesData] = await Promise.all([
-          getCanteenProducts(),
-          getCanteenSales(),
-        ]);
-        if (isMounted) {
-          setProducts(prodData || []);
-          setSales(salesData || []);
-        }
-      } catch (err) {
-        if (isMounted) console.error(err);
-      } finally {
-        if (isMounted) setLoading(false);
-      }
-    };
-
-    fetchData();
-
-    return () => {
-      isMounted = false;
-    };
   }, []);
 
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
+
   const addToCart = (product) => {
+    if (product.stock <= 0) return;
     setCart((prev) => {
       const existing = prev.find((item) => item.id === product.id);
       if (existing) {
+        if (existing.quantity >= product.stock) return prev;
         return prev.map((item) =>
           item.id === product.id
             ? { ...item, quantity: item.quantity + 1 }
@@ -109,10 +97,37 @@ export default function AdminCantina() {
       });
       setCart([]);
       loadData();
+      addToast("Venta registrada con éxito", "success");
     } catch {
-      alert("Error al registrar la venta.");
+      addToast("Error al registrar la venta.", "error");
     } finally {
       setSubmittingSale(false);
+    }
+  };
+
+  const handleOpenSummary = async () => {
+    try {
+      const data = await getCanteenSummary();
+      setDailySummary(data);
+      setShowSummaryModal(true);
+    } catch {
+      alert("Error al obtener resumen de la jornada");
+    }
+  };
+
+  const handleCloseSession = async () => {
+    const confirmClose = window.confirm(
+      "¿Estás seguro de cerrar la jornada actual? La caja volverá a $0 para el próximo evento (el stock de productos y el historial de ventas no se pierden).",
+    );
+    if (!confirmClose) return;
+
+    try {
+      await closeCanteenSession();
+      setShowSummaryModal(false);
+      loadData();
+      addToast("Jornada cerrada exitosamente. Caja reiniciada.", "success");
+    } catch {
+      addToast("Error al cerrar la jornada.", "error");
     }
   };
 
@@ -127,12 +142,13 @@ export default function AdminCantina() {
       setShowProductModal(false);
       setNewProd({ name: "", category: "comida", salePrice: "", stock: 0 });
       loadData();
+      addToast("Producto registrado con éxito", "success");
     } catch {
-      alert("Error al registrar producto.");
+      addToast("Error al registrar producto.", "error");
     }
   };
 
-  const totalRecaudado = sales.reduce(
+  const totalRecaudadoJornada = sales.reduce(
     (acc, s) => acc + Number(s.total_amount || s.totalAmount || 0),
     0,
   );
@@ -147,25 +163,33 @@ export default function AdminCantina() {
             acumulada.
           </p>
         </div>
-        <button
-          className="btn btn-outline-dark fw-bold px-3"
-          onClick={() => setShowProductModal(true)}
-        >
-          + Agregar Insumo/Comida
-        </button>
+        <div className="d-flex gap-2">
+          <button
+            className="btn btn-dark fw-bold px-3"
+            onClick={handleOpenSummary}
+          >
+            Resumen / Cierre de Jornada
+          </button>
+          <button
+            className="btn btn-outline-dark fw-bold px-3"
+            onClick={() => setShowProductModal(true)}
+          >
+            + Insumo / Comida
+          </button>
+        </div>
       </div>
 
       <div className="row g-4 mb-4">
         <div className="col-12 col-md-4">
           <div className="card border-0 shadow-sm p-4 bg-white">
             <span className="text-muted small fw-bold text-uppercase">
-              Caja Total Cantina
+              Caja Jornada Actual
             </span>
             <h2 className="fw-bold text-success mt-2 mb-0">
-              ${totalRecaudado.toLocaleString("es-AR")}
+              ${totalRecaudadoJornada.toLocaleString("es-AR")}
             </h2>
             <span className="text-muted small mt-1">
-              {sales.length} tickets emitidos
+              {sales.length} tickets emitidos en este turno
             </span>
           </div>
         </div>
@@ -176,9 +200,7 @@ export default function AdminCantina() {
           <div className="card border-0 shadow-sm p-4 bg-white h-100">
             <h5 className="fw-bold mb-3">Menú Disponible</h5>
             {loading ? (
-              <div className="text-center py-4">
-                <div className="spinner-border text-dark" role="status"></div>
-              </div>
+              <LoadingSpinner message="Cargando insumos..." />
             ) : products.length === 0 ? (
               <p className="text-muted small">
                 No hay insumos cargados en cantina.
@@ -189,7 +211,9 @@ export default function AdminCantina() {
                   <div key={prod.id} className="col-6 col-md-4">
                     <button
                       type="button"
+                      disabled={prod.stock <= 0}
                       className="btn btn-light border text-start w-100 p-3 h-100 d-flex flex-column justify-content-between"
+                      style={{ opacity: prod.stock > 0 ? 1 : 0.5 }}
                       onClick={() => addToCart(prod)}
                     >
                       <div className="fw-bold text-dark">{prod.name}</div>
@@ -288,6 +312,138 @@ export default function AdminCantina() {
           </div>
         </div>
       </div>
+
+      {showSummaryModal && dailySummary && (
+        <div
+          className="modal fade show d-block"
+          tabIndex="-1"
+          style={{ backgroundColor: "rgba(0,0,0,0.6)", zIndex: 1050 }}
+        >
+          <div className="modal-dialog modal-dialog-centered modal-lg">
+            <div className="modal-content border-0 shadow">
+              <div className="modal-header bg-dark text-white">
+                <h5 className="modal-title fw-bold">
+                  Resumen de Cierre de Jornada
+                </h5>
+                <button
+                  type="button"
+                  className="btn-close btn-close-white"
+                  onClick={() => setShowSummaryModal(false)}
+                ></button>
+              </div>
+
+              <div className="modal-body p-4">
+                <div className="row g-3 mb-4">
+                  <div className="col-md-3">
+                    <div className="p-3 bg-light rounded text-center border">
+                      <span className="small text-muted fw-bold d-block">
+                        TOTAL CAJA
+                      </span>
+                      <span className="fs-5 fw-bold text-success">
+                        $
+                        {Number(dailySummary.summary.total).toLocaleString(
+                          "es-AR",
+                        )}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="col-md-3">
+                    <div className="p-3 bg-light rounded text-center border">
+                      <span className="small text-muted fw-bold d-block">
+                        EFECTIVO
+                      </span>
+                      <span className="fs-5 fw-bold">
+                        $
+                        {Number(dailySummary.summary.efectivo).toLocaleString(
+                          "es-AR",
+                        )}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="col-md-3">
+                    <div className="p-3 bg-light rounded text-center border">
+                      <span className="small text-muted fw-bold d-block">
+                        TRANSFERENCIA/QR
+                      </span>
+                      <span className="fs-5 fw-bold">
+                        $
+                        {Number(
+                          dailySummary.summary.transferencia,
+                        ).toLocaleString("es-AR")}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="col-md-3">
+                    <div className="p-3 bg-light rounded text-center border">
+                      <span className="small text-muted fw-bold d-block">
+                        DÉBITO
+                      </span>
+                      <span className="fs-5 fw-bold">
+                        $
+                        {Number(dailySummary.summary.debito).toLocaleString(
+                          "es-AR",
+                        )}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <h6 className="fw-bold mb-2">
+                  Artículos Despachados en esta Jornada
+                </h6>
+                {dailySummary.items.length === 0 ? (
+                  <p className="text-muted small">
+                    No se despacharon productos todavía.
+                  </p>
+                ) : (
+                  <div
+                    className="table-responsive"
+                    style={{ maxHeight: "250px" }}
+                  >
+                    <table className="table table-sm table-hover align-middle">
+                      <thead className="table-light small">
+                        <tr>
+                          <th>Artículo</th>
+                          <th className="text-center">Cantidad</th>
+                          <th className="text-end">Recaudado</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {dailySummary.items.map((it, idx) => (
+                          <tr key={idx}>
+                            <td className="fw-bold">{it.name}</td>
+                            <td className="text-center">{it.total_qty} u.</td>
+                            <td className="text-end fw-semibold">
+                              ${Number(it.total_amount).toLocaleString("es-AR")}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+
+              <div className="modal-footer bg-light d-flex justify-content-between">
+                <button
+                  type="button"
+                  className="btn btn-danger fw-bold"
+                  onClick={handleCloseSession}
+                >
+                  Cerrar Jornada y Reiniciar Caja
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={() => setShowSummaryModal(false)}
+                >
+                  Volver al Mostrador
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {showProductModal && (
         <div

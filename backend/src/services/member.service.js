@@ -43,6 +43,16 @@ class MemberService {
 
     return member;
   }
+  async updateMemberStatus(id, status) {
+    const member = await memberRepository.findById(id);
+    if (!member) {
+      const error = new Error("Member not found");
+      error.statusCode = 404;
+      throw error;
+    }
+    await memberRepository.updateStatus(id, status);
+    return await memberRepository.findById(id);
+  }
 }
 
 module.exports = new MemberService();

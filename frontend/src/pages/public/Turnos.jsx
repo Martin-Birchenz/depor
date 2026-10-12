@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { getFacilities } from "../../service/facility.service";
+import LoadingSpinner from "../../components/common/LoadingSpinner";
 
 export default function Turnos() {
   const [facilities, setFacilities] = useState([]);
@@ -83,12 +84,7 @@ export default function Turnos() {
 
       <div className="container" style={{ maxWidth: "1000px" }}>
         {loading ? (
-          <div className="text-center py-5">
-            <div className="spinner-border text-dark" role="status"></div>
-            <p className="mt-2 text-muted small">
-              Cargando instalaciones disponibles...
-            </p>
-          </div>
+          <LoadingSpinner message="Cargando reservas..." />
         ) : (
           <div className="row g-4">
             {facilities.map((fac) => {
@@ -107,10 +103,6 @@ export default function Turnos() {
                     <div>
                       <div className="d-flex justify-content-between align-items-start mb-2">
                         <h4 className="fw-bold mb-0">{fac.name}</h4>
-                        <span className="badge bg-black text-white">
-                          {fac.sport || fac.sport_type || "Deporte"}
-                        </span>{" "}
-                        {/*[cite: 1] */}
                       </div>
                       <p className="text-muted small mb-4">{fac.description}</p>
                     </div>
