@@ -64,7 +64,7 @@ export default function App() {
               <Route
                 element={
                   <ProtectedRoute
-                    allowedRoles={["adminBirchenz", "secretaria"]}
+                    allowedRoles={["admin", "secretaria", "general"]}
                   />
                 }
               >
@@ -76,7 +76,7 @@ export default function App() {
               <Route
                 element={
                   <ProtectedRoute
-                    allowedRoles={["adminBirchenz", "secretaria", "tenis"]}
+                    allowedRoles={["admin", "secretaria", "tenis"]}
                   />
                 }
               >
@@ -86,7 +86,7 @@ export default function App() {
               <Route
                 element={
                   <ProtectedRoute
-                    allowedRoles={["adminBirchenz", "secretaria", "padel"]}
+                    allowedRoles={["admin", "secretaria", "padel"]}
                   />
                 }
               >
@@ -96,11 +96,7 @@ export default function App() {
               <Route
                 element={
                   <ProtectedRoute
-                    allowedRoles={[
-                      "adminBirchenz",
-                      "secretaria",
-                      "pelota_paleta",
-                    ]}
+                    allowedRoles={["admin", "secretaria", "pelota_paleta"]}
                   />
                 }
               >
@@ -113,7 +109,7 @@ export default function App() {
               <Route
                 element={
                   <ProtectedRoute
-                    allowedRoles={["adminBirchenz", "secretaria", "salon"]}
+                    allowedRoles={["admin", "secretaria", "salon"]}
                   />
                 }
               >
@@ -123,7 +119,7 @@ export default function App() {
               <Route
                 element={
                   <ProtectedRoute
-                    allowedRoles={["adminBirchenz", "secretaria", "tienda"]}
+                    allowedRoles={["admin", "secretaria", "tienda"]}
                   />
                 }
               >
@@ -136,7 +132,7 @@ export default function App() {
               <Route
                 element={
                   <ProtectedRoute
-                    allowedRoles={["adminBirchenz", "secretaria", "cantina"]}
+                    allowedRoles={["admin", "secretaria", "cantina"]}
                   />
                 }
               >
@@ -146,7 +142,7 @@ export default function App() {
               <Route
                 element={
                   <ProtectedRoute
-                    allowedRoles={["adminBirchenz", "secretaria", "juveniles"]}
+                    allowedRoles={["admin", "secretaria", "juveniles"]}
                   />
                 }
               >

@@ -9,57 +9,57 @@ export default function AdminLayout() {
     {
       label: "Dashboard",
       to: "/admin",
-      roles: ["adminBirchenz", "secretaria"],
+      roles: ["admin", "secretaria"],
     },
     {
       label: "Socios",
       to: "/admin/socios",
-      roles: ["adminBirchenz", "secretaria"],
+      roles: ["admin", "secretaria"],
     },
     {
       label: "Colonia",
       to: "/admin/colonia",
-      roles: ["adminBirchenz", "secretaria"],
+      roles: ["admin", "secretaria"],
     },
     {
       label: "Indumentaria",
       to: "/admin/indumentaria",
-      roles: ["adminBirchenz", "tienda", "secretaria"],
+      roles: ["admin", "tienda", "secretaria"],
     },
     {
       label: "Cantina",
       to: "/admin/cantina",
-      roles: ["adminBirchenz", "cantina", "secretaria"],
+      roles: ["admin", "cantina", "secretaria"],
     },
     {
       label: "Infantiles",
       to: "/admin/infantiles",
-      roles: ["adminBirchenz", "juveniles", "secretaria"],
+      roles: ["admin", "juveniles", "secretaria"],
     },
     {
       label: "Tenis",
       to: "/admin/tenis",
-      roles: ["adminBirchenz", "tenis", "secretaria"],
+      roles: ["admin", "tenis", "secretaria"],
     },
     {
       label: "Pádel",
       to: "/admin/padel",
-      roles: ["adminBirchenz", "padel", "secretaria"],
+      roles: ["admin", "padel", "secretaria"],
     },
     {
       label: "Pelota Paleta",
       to: "/admin/pelota-paleta",
-      roles: ["adminBirchenz", "pelota_paleta", "secretaria"],
+      roles: ["admin", "pelota_paleta", "secretaria"],
     },
     {
       label: "Salón y Quinchos",
       to: "/admin/salon",
-      roles: ["adminBirchenz", "salon", "secretaria"],
+      roles: ["admin", "salon", "secretaria"],
     },
   ];
 
   const accessibleItems = navItems.filter(
-    (item) => role === "adminBirchenz" || item.roles.includes(role),
+    (item) => role === "admin" || item.roles.includes(role),
   );
 
   return (
