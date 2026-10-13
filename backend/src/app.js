@@ -25,25 +25,23 @@ const allowedOrigins = [
 ].filter(Boolean);
 
 app.use(
-  app.use(
-    cors({
-      origin: (origin, callback) => {
-        if (!origin) return callback(null, true);
+  cors({
+    origin: (origin, callback) => {
+      if (!origin) return callback(null, true);
 
-        const isAllowed =
-          allowedOrigins.includes(origin) || origin.endsWith(".vercel.app");
+      const isAllowed =
+        allowedOrigins.includes(origin) || origin.endsWith(".vercel.app");
 
-        if (isAllowed) {
-          return callback(null, true);
-        }
+      if (isAllowed) {
+        return callback(null, true);
+      }
 
-        return callback(null, false);
-      },
-      credentials: true,
-      methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-      allowedHeaders: ["Content-Type", "Authorization"],
-    }),
-  ),
+      return callback(null, false);
+    },
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  }),
 );
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
