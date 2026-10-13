@@ -24,29 +24,37 @@ export default function AdminLayout() {
     {
       label: "Indumentaria",
       to: "/admin/indumentaria",
-      roles: ["adminBirchenz", "tienda"],
+      roles: ["adminBirchenz", "tienda", "secretaria"],
     },
     {
       label: "Cantina",
       to: "/admin/cantina",
-      roles: ["adminBirchenz", "cantina"],
+      roles: ["adminBirchenz", "cantina", "secretaria"],
     },
     {
       label: "Infantiles",
       to: "/admin/infantiles",
-      roles: ["adminBirchenz", "juveniles"],
+      roles: ["adminBirchenz", "juveniles", "secretaria"],
     },
-    { label: "Tenis", to: "/admin/tenis", roles: ["adminBirchenz", "tenis"] },
-    { label: "Pádel", to: "/admin/padel", roles: ["adminBirchenz", "padel"] },
+    {
+      label: "Tenis",
+      to: "/admin/tenis",
+      roles: ["adminBirchenz", "tenis", "secretaria"],
+    },
+    {
+      label: "Pádel",
+      to: "/admin/padel",
+      roles: ["adminBirchenz", "padel", "secretaria"],
+    },
     {
       label: "Pelota Paleta",
       to: "/admin/pelota-paleta",
-      roles: ["adminBirchenz", "pelota_paleta"],
+      roles: ["adminBirchenz", "pelota_paleta", "secretaria"],
     },
     {
       label: "Salón y Quinchos",
       to: "/admin/salon",
-      roles: ["adminBirchenz", "salon"],
+      roles: ["adminBirchenz", "salon", "secretaria"],
     },
   ];
 
