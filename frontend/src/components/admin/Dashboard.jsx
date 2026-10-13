@@ -48,7 +48,7 @@ export default function AdminDashboard() {
 
   return (
     <div className="pb-5">
-      <div className="bg-white p-4 rounded-3 shadow-sm border mb-4 d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+      <div className="bg-white p-3 p-md-4 rounded-3 shadow-sm border mb-3 mb-md-4 d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3">
         <div>
           <span className="badge bg-dark text-uppercase px-2 py-1 mb-2">
             Administración General
@@ -80,9 +80,9 @@ export default function AdminDashboard() {
             Ir al Padrón →
           </Link>
         </div>
-        <div className="card-body p-4">
+        <div className="card-body p-3 p-md-4">
           <div className="row g-3 mb-4">
-            <div className="col-12 col-sm-6 col-md-3">
+            <div className="col-6 col-lg-3">
               <div className="p-3 rounded-3 bg-light border text-center">
                 <span className="text-muted small fw-bold text-uppercase d-block mb-1">
                   Total Padrón
@@ -91,7 +91,7 @@ export default function AdminDashboard() {
                 <span className="text-muted small">Socios registrados</span>
               </div>
             </div>
-            <div className="col-12 col-sm-6 col-md-3">
+            <div className="col-6 col-lg-3">
               <div className="p-3 rounded-3 bg-light border border-success text-center">
                 <span className="text-success small fw-bold text-uppercase d-block mb-1">
                   Al Día (Activos)
@@ -104,7 +104,7 @@ export default function AdminDashboard() {
                 </span>
               </div>
             </div>
-            <div className="col-12 col-sm-6 col-md-3">
+            <div className="col-6 col-lg-3">
               <div className="p-3 rounded-3 bg-light border border-danger text-center">
                 <span className="text-danger small fw-bold text-uppercase d-block mb-1">
                   Deudores
@@ -115,7 +115,7 @@ export default function AdminDashboard() {
                 <span className="text-muted small">Cuota pendiente</span>
               </div>
             </div>
-            <div className="col-12 col-sm-6 col-md-3">
+            <div className="col-6 col-lg-3">
               <div className="p-3 rounded-3 bg-light border text-center">
                 <span className="text-secondary small fw-bold text-uppercase d-block mb-1">
                   Bajas
@@ -224,21 +224,23 @@ export default function AdminDashboard() {
             Ver Colonia →
           </Link>
         </div>
-        <div className="card-body p-4">
+        <div className="card-body p-3 p-md-4">
           <div className="row g-3 mb-4">
-            <div className="col-12 col-sm-6 col-md-3">
-              <div className="p-3 rounded-3 bg-light border text-center">
+            <div className="col-6 col-lg-3">
+              <div className="p-2 p-md-3 rounded-3 bg-light border text-center">
                 <span className="text-muted small fw-bold text-uppercase d-block mb-1">
                   Total Preinscriptos
                 </span>
-                <h3 className="fw-bold mb-0">{campTotals.total || 0}</h3>
+                <h3 className="fw-bold mb-0 fs-4 fs-md-3">
+                  {campTotals.total || 0}
+                </h3>
                 <span className="text-muted small">
                   {campTotals.members_in_camp || 0} socios de club
                 </span>
               </div>
             </div>
-            <div className="col-12 col-sm-6 col-md-3">
-              <div className="p-3 rounded-3 bg-light border border-success text-center">
+            <div className="col-6 col-lg-3">
+              <div className="p-2 p-md-3 rounded-3 bg-light border border-success text-center">
                 <span className="text-success small fw-bold text-uppercase d-block mb-1">
                   Confirmados (Apto OK)
                 </span>
@@ -248,8 +250,8 @@ export default function AdminDashboard() {
                 <span className="text-muted small">Ficha entregada</span>
               </div>
             </div>
-            <div className="col-12 col-sm-6 col-md-3">
-              <div className="p-3 rounded-3 bg-light border border-warning text-center">
+            <div className="col-6 col-lg-3">
+              <div className="p-2 p-md-3 rounded-3 bg-light border border-warning text-center">
                 <span className="text-warning text-dark small fw-bold text-uppercase d-block mb-1">
                   Pendientes
                 </span>
@@ -259,8 +261,8 @@ export default function AdminDashboard() {
                 <span className="text-muted small">Falta médica o pago</span>
               </div>
             </div>
-            <div className="col-12 col-sm-6 col-md-3">
-              <div className="p-3 rounded-3 bg-light border text-center">
+            <div className="col-6 col-lg-3">
+              <div className="p-2 p-md-3 rounded-3 bg-light border text-center">
                 <span className="text-primary small fw-bold text-uppercase d-block mb-1">
                   Distribución de Cupo
                 </span>
@@ -280,7 +282,10 @@ export default function AdminDashboard() {
             Últimas solicitudes recibidas
           </h6>
           <div className="table-responsive rounded-3 border">
-            <table className="table table-hover align-middle mb-0">
+            <table
+              className="table table-hover align-middle mb-0"
+              style={{ minWidth: "480px" }}
+            >
               <thead className="table-light small">
                 <tr>
                   <th className="ps-3">Alumno / Menor</th>
@@ -349,7 +354,7 @@ export default function AdminDashboard() {
                 Abrir Mostrador →
               </Link>
             </div>
-            <div className="card-body p-4">
+            <div className="card-body p-3 p-md-4">
               <div className="row g-3 mb-4">
                 <div className="col-12 col-sm-6">
                   <div className="p-3 rounded-3 bg-light border text-center">
@@ -463,7 +468,7 @@ export default function AdminDashboard() {
                 Ver Catálogo →
               </Link>
             </div>
-            <div className="card-body p-4 d-flex flex-column justify-content-between">
+            <div className="card-body p-3 p-md-4 d-flex flex-column justify-content-between">
               <div>
                 <div className="row g-3 mb-4">
                   <div className="col-6">

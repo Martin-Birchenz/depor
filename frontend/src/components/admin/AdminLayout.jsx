@@ -55,24 +55,28 @@ export default function AdminLayout() {
   );
 
   return (
-    <div className="d-flex min-vh-100 bg-light">
+    <div className="d-flex flex-column flex-md-row min-vh-100 bg-light">
       <aside
-        className="bg-dark text-white p-3 d-flex flex-column"
-        style={{ width: "260px" }}
+        className="bg-dark text-white p-3 d-flex flex-column flex-shrink-0"
+        style={{ width: "100%", maxWidth: "100%", mdWidth: "260px" }}
       >
-        <div className="mb-4 text-center">
-          <h5 className="fw-bold mb-0 text-white">El Depor Admin</h5>
-          <small className="text-secondary text-uppercase">{role}</small>
+        <div className="d-flex justify-content-between align-items-center mb-3 mb-md-4 text-md-center">
+          <div>
+            <h5 className="fw-bold mb-0 text-white">Administración</h5>
+            <small className="text-secondary text-uppercase">{role}</small>
+          </div>
         </div>
 
-        <nav className="nav nav-pills flex-column flex-grow-1 gap-1">
+        <nav className="nav nav-pills flex-column gap-1">
           {accessibleItems.map((item) => (
             <NavLink
               key={item.to}
               to={item.to}
               end={item.to === "/admin"}
               className={({ isActive }) =>
-                `nav-link text-white ${isActive ? "active bg-secondary" : "hover-light"}`
+                `nav-link text-white py-2 px-3 rounded-2 ${
+                  isActive ? "active bg-secondary fw-bold" : "hover-light"
+                }`
               }
             >
               {item.label}
@@ -80,15 +84,17 @@ export default function AdminLayout() {
           ))}
         </nav>
 
-        <button
-          onClick={logout}
-          className="btn btn-outline-danger btn-sm w-100 mt-auto"
-        >
-          Cerrar Sesión
-        </button>
+        <div className="pt-3 mt-3 border-top border-secondary">
+          <button
+            onClick={logout}
+            className="btn btn-outline-danger btn-sm w-100 d-flex align-items-center justify-content-center gap-2 py-2 fw-semibold"
+          >
+            Cerrar Sesión
+          </button>
+        </div>
       </aside>
 
-      <main className="flex-grow-1 p-4 overflow-auto">
+      <main className="flex-grow-1 p-2 p-sm-3 p-md-4 overflow-auto">
         <Outlet />
       </main>
     </div>

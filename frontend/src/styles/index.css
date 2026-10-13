@@ -46,24 +46,38 @@ body {
     linear-gradient(
       to bottom,
       rgba(0, 0, 0, 0.85) 0%,
-      rgba(0, 0, 0, 0.4) 40%,
-      rgba(0, 0, 0, 0.85) 100%
+      rgba(0, 0, 0, 0.45) 50%,
+      rgba(0, 0, 0, 0.9) 100%
     ),
     url("../assets/copa-victoria-cdn.jpg");
   background-size: cover;
-  background-position: center;
-  background-attachment: fixed;
+  background-position: center center;
+  background-repeat: no-repeat;
+  background-attachment: scroll;
+}
+
+@media (min-width: 992px) {
+  .hero-section {
+    background-attachment: fixed;
+  }
 }
 
 .hero-section h1 {
   font-family: "Playfair Display", serif;
-  font-size: 3.8rem;
+  font-size: clamp(2.2rem, 6vw, 3.8rem);
+  line-height: 1.15;
   color: #ffffff;
 }
 
 .hero-section p {
   color: #ffffff;
   font-weight: bold;
+}
+
+@media (min-width: 768px) {
+  aside.bg-dark {
+    width: 260px !important;
+  }
 }
 
 .hero-section a {

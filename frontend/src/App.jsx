@@ -5,6 +5,7 @@ import Navbar from "./components/layout/Navbar";
 import Footer from "./components/layout/Footer";
 import ProtectedRoute from "./components/admin/ProtectedRoute.jsx";
 import AdminLayout from "./components/admin/AdminLayout";
+import ScrollToTop from "./components/common/ScrollTop";
 
 import Home from "./pages/public/Home";
 import Indumentaria from "./pages/public/Indumentaria";
@@ -43,6 +44,7 @@ export default function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
+        <ScrollToTop />
         <Routes>
           <Route element={<PublicLayout />}>
             <Route path="/" element={<Home />} />
