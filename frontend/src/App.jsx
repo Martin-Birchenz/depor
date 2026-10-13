@@ -71,9 +71,120 @@ export default function App() {
                 <Route path="/admin" element={<Dashboard />} />
               </Route>
 
-              <Route element={<ProtectedRoute allowedRoles={["secretaria"]} />}>
-                <Route path="/admin/socios" element={<AdminSocios />} />
-                <Route path="/admin/colonia" element={<AdminColonia />} />
+              <Route element={<ProtectedRoute />}>
+                <Route element={<AdminLayout />}>
+                  <Route
+                    element={
+                      <ProtectedRoute
+                        allowedRoles={["adminBirchenz", "secretaria"]}
+                      />
+                    }
+                  >
+                    <Route path="/admin" element={<Dashboard />} />
+                  </Route>
+
+                  <Route
+                    element={
+                      <ProtectedRoute
+                        allowedRoles={["adminBirchenz", "secretaria"]}
+                      />
+                    }
+                  >
+                    <Route path="/admin/socios" element={<AdminSocios />} />
+                    <Route path="/admin/colonia" element={<AdminColonia />} />
+                  </Route>
+
+                  <Route
+                    element={
+                      <ProtectedRoute
+                        allowedRoles={["adminBirchenz", "secretaria", "tenis"]}
+                      />
+                    }
+                  >
+                    <Route path="/admin/tenis" element={<AdminTenis />} />
+                  </Route>
+
+                  <Route
+                    element={
+                      <ProtectedRoute
+                        allowedRoles={["adminBirchenz", "secretaria", "padel"]}
+                      />
+                    }
+                  >
+                    <Route path="/admin/padel" element={<AdminPadel />} />
+                  </Route>
+
+                  <Route
+                    element={
+                      <ProtectedRoute
+                        allowedRoles={[
+                          "adminBirchenz",
+                          "secretaria",
+                          "pelota_paleta",
+                        ]}
+                      />
+                    }
+                  >
+                    <Route
+                      path="/admin/pelota-paleta"
+                      element={<AdminPelotaPaleta />}
+                    />
+                  </Route>
+
+                  <Route
+                    element={
+                      <ProtectedRoute
+                        allowedRoles={["adminBirchenz", "secretaria", "salon"]}
+                      />
+                    }
+                  >
+                    <Route path="/admin/salon" element={<AdminSalon />} />
+                  </Route>
+
+                  <Route
+                    element={
+                      <ProtectedRoute
+                        allowedRoles={["adminBirchenz", "secretaria", "tienda"]}
+                      />
+                    }
+                  >
+                    <Route
+                      path="/admin/indumentaria"
+                      element={<AdminIndumentaria />}
+                    />
+                  </Route>
+
+                  <Route
+                    element={
+                      <ProtectedRoute
+                        allowedRoles={[
+                          "adminBirchenz",
+                          "secretaria",
+                          "cantina",
+                        ]}
+                      />
+                    }
+                  >
+                    <Route path="/admin/cantina" element={<AdminCantina />} />
+                  </Route>
+
+                  <Route
+                    element={
+                      <ProtectedRoute
+                        allowedRoles={[
+                          "adminBirchenz",
+                          "secretaria",
+                          "juveniles",
+                        ]}
+                      />
+                    }
+                  >
+                    <Route
+                      path="/admin/infantiles"
+                      element={<AdminInfantiles />}
+                    />
+                  </Route>
+                </Route>
               </Route>
 
               <Route element={<ProtectedRoute allowedRoles={["tenis"]} />}>
