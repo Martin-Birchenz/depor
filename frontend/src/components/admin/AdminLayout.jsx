@@ -1,8 +1,12 @@
 import { useState } from "react";
 import { NavLink, Outlet } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
 
-const AdminLayout = ({ accessibleItems = [], role, logout }) => {
+export default function AdminLayout() {
+  const { user, logout } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
+
+  const role = user?.role || user?.roleName || "";
 
   const toggleMenu = () => {
     setMenuOpen((prev) => !prev);
@@ -11,6 +15,66 @@ const AdminLayout = ({ accessibleItems = [], role, logout }) => {
   const closeMenu = () => {
     setMenuOpen(false);
   };
+
+  const navItems = [
+    {
+      label: "Dashboard",
+      to: "/admin",
+      roles: ["admin", "secretaria"],
+    },
+    {
+      label: "Socios",
+      to: "/admin/socios",
+      roles: ["admin", "secretaria"],
+    },
+    {
+      label: "Colonia",
+      to: "/admin/colonia",
+      roles: ["admin", "secretaria"],
+    },
+    {
+      label: "Indumentaria",
+      to: "/admin/indumentaria",
+      roles: ["admin", "tienda", "secretaria"],
+    },
+    {
+      label: "Cantina",
+      to: "/admin/cantina",
+      roles: ["admin", "cantina", "secretaria"],
+    },
+    {
+      label: "Infantiles",
+      to: "/admin/infantiles",
+      roles: ["admin", "juveniles", "secretaria"],
+    },
+    {
+      label: "Tenis",
+      to: "/admin/tenis",
+      roles: ["admin", "tenis", "secretaria"],
+    },
+    {
+      label: "Pádel",
+      to: "/admin/padel",
+      roles: ["admin", "padel", "secretaria"],
+    },
+    {
+      label: "Pelota Paleta",
+      to: "/admin/pelota-paleta",
+      roles: ["admin", "pelota_paleta", "secretaria"],
+    },
+    {
+      label: "Salón y Quinchos",
+      to: "/admin/salon",
+      roles: ["admin", "salon", "secretaria"],
+    },
+  ];
+
+  const isSuperUser =
+    role === "admin" || role === "adminBirchenz" || role === "secretaria";
+
+  const accessibleItems = navItems.filter(
+    (item) => isSuperUser || item.roles.includes(role),
+  );
 
   return (
     <div className="d-flex flex-column flex-md-row min-vh-100 bg-light">
@@ -22,8 +86,8 @@ const AdminLayout = ({ accessibleItems = [], role, logout }) => {
         }}
       >
         <div className="d-flex justify-content-between align-items-center mb-md-4">
-          <div className="text-start text-md-center w-100">
-            <h5 className="fw-bold mb-0 text-white">El Depor Admin</h5>
+          <div className="text-start text-md-center">
+            <h5 className="fw-bold mb-0 text-white">Administración</h5>
             <small className="text-secondary text-uppercase d-block">
               {role === "admin" || role === "adminBirchenz"
                 ? "Administración General"
@@ -87,6 +151,4 @@ const AdminLayout = ({ accessibleItems = [], role, logout }) => {
       </main>
     </div>
   );
-};
-
-export default AdminLayout;
+}
