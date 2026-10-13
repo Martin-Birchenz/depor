@@ -30,7 +30,8 @@ app.use(
       if (!origin) return callback(null, true);
 
       const isAllowed =
-        allowedOrigins.includes(origin) || origin.endsWith(".vercel.app");
+        allowedOrigins.includes(origin) ||
+        /\.vercel\.app$/.test(new URL(origin).hostname);
 
       if (isAllowed) {
         return callback(null, true);
@@ -40,7 +41,7 @@ app.use(
     },
     credentials: true,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
+    allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
   }),
 );
 app.use(express.json());
