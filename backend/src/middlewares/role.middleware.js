@@ -8,11 +8,17 @@ const authorize = (...allowedRoles) => {
         .json({ message: "No autenticado o rol no asignado" });
     }
 
-    if (req.user.role === "adminBirchenz") {
+    const userRole = req.user.role;
+
+    if (
+      userRole === "admin" ||
+      userRole === "adminBirchenz" ||
+      userRole === "secretaria"
+    ) {
       return next();
     }
 
-    if (!roles.includes(req.user.role)) {
+    if (!roles.includes(userRole)) {
       return res.status(403).json({
         message:
           "Acceso denegado: no tenés permisos para gestionar este módulo",

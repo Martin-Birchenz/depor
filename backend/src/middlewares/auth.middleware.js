@@ -31,7 +31,7 @@ const authenticate = (req, res, next) => {
 const optionalAuthenticate = (req, res, next) => {
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    return next(); // Continúa sin req.user
+    return next();
   }
   try {
     const token = authHeader.split(" ")[1];
