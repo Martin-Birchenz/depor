@@ -12,7 +12,7 @@ export default function Deportes() {
       name: "Fútbol",
       img: futbolImg,
       desc: "Escuela formativa de infantiles, juveniles y primera división. Competencia en Liga Departamental de Fútbol de Nogoyá.",
-      categories: "Infantiles, Sub-15, Sub-17, Reserva y Primera",
+      categories: "Infantiles, Sub-15, sub-23 y Primera",
     },
     {
       name: "Tenis",
@@ -30,12 +30,12 @@ export default function Deportes() {
       name: "Pelota Paleta",
       img: pelotaPaletaImg,
       desc: "El tradicional trinquete del club, referente histórico de la disciplina en la provincia de Entre Ríos.",
-      categories: "Práctica libre, veteranos y primera",
+      categories: "Práctica libre, competencia y torneos",
     },
     {
       name: "Natación",
       img: natacionImg,
-      desc: "Temporada de verano, clases de natación para todas las edades y andariveles para pileta libre.",
+      desc: "Temporada de verano, clases de natación para todas las edades y también para pileta libre.",
       categories: "Ambientación, Colonia y Adultos",
     },
     {

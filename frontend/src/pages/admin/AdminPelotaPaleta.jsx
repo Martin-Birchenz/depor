@@ -246,7 +246,7 @@ export default function AdminPelotaPaleta() {
               className={`nav-link ${activeTab === "buffet" ? "active btn-dark" : "text-dark"}`}
               onClick={() => setActiveTab("buffet")}
             >
-              Buffet de Cancha
+              Comedor
             </button>
           </li>
         </ul>

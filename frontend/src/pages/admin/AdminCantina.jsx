@@ -157,11 +157,7 @@ export default function AdminCantina() {
     <div>
       <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
         <div>
-          <h2 className="fw-bold mb-1">Cantina y Buffet de Fútbol</h2>
-          <p className="text-muted small mb-0">
-            Punto de venta para jornadas de partidos, despacho rápido y caja
-            acumulada.
-          </p>
+          <h2 className="fw-bold mb-1">Cantina</h2>
         </div>
         <div className="d-flex gap-2">
           <button

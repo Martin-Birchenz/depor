@@ -290,7 +290,7 @@ export default function AdminSalon() {
                 </label>
                 <textarea
                   rows="2"
-                  placeholder="Ej: Seña $10.000 abonada. Uso de freidora."
+                  placeholder="Ej: Seña $10.000 abonada."
                   className="form-control"
                   value={form.notes}
                   onChange={(e) => setForm({ ...form, notes: e.target.value })}

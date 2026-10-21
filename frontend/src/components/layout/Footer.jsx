@@ -6,8 +6,7 @@ export default function Footer() {
           <div className="col-md-4">
             <h5 className="fw-bold mb-3">DEPORTIVO NOGOYÁ</h5>
             <p className="small text-white-50">
-              El orgullo del Barrio Lourdes desde 1944. Un club, una familia,
-              una pasión.
+              El orgullo del Barrio Lourdes desde 1944.
             </p>
           </div>
 

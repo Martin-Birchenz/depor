@@ -86,7 +86,7 @@ export default function Colonia() {
       <div className="container text-center mb-4">
         <h1 className="section-title mb-2">Temporada de Pileta</h1>
         <p className="lead text-muted mx-auto" style={{ maxWidth: "650px" }}>
-          Actividades acuáticas en el predio del club: colonia infantil y pileta
+          Actividades acuáticas en el predio del club, colonia infantil y pileta
           libre para adultos.
         </p>
 
@@ -180,7 +180,8 @@ export default function Colonia() {
                   </li>
                   <li>
                     <strong className="text-white">Actividades:</strong> Clases
-                    de natación diarias, fútbol, tenis, talleres y campamento.
+                    de natación diarias,juegos recreativos, talleres y
+                    campamento.
                   </li>
                   <li>
                     <strong className="text-white">Beneficio de socio:</strong>{" "}

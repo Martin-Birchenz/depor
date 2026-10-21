@@ -10,7 +10,7 @@ export default function Historia() {
     {
       year: "Crecimiento",
       title: "Obras y expansión de la sede",
-      desc: "La adquisición y acondicionamiento del predio en Mihura y Fritz Gerald permitió la construcción de las canchas de tenis, la cancha de pelota paleta y el natatorio.",
+      desc: "La adquisición y acondicionamiento del predio en Mihura y Fritz Gerald permitió la construcción de las canchas de tenis, la cancha de pelota paleta y de natación.",
     },
     {
       year: "Identidad",
@@ -29,7 +29,7 @@ export default function Historia() {
       <div className="container text-center mb-5">
         <h1 className="section-title mb-2">Nuestra Historia</h1>
         <p className="lead text-muted mx-auto" style={{ maxWidth: "700px" }}>
-          Más de un siglo de identidad, deporte y compromiso social en Nogoyá.
+          Décadas de identidad, deporte y compromiso social en Nogoyá.
         </p>
       </div>
 
@@ -49,17 +49,17 @@ export default function Historia() {
                 El Corazón del Barrio Lourdes
               </h3>
               <p className="text-muted small leading-relaxed">
-                El Club Deportivo Nogoyá no es solo una institución deportiva;
-                es el punto de encuentro de generaciones de familias. Desde los
-                primeros picados de fútbol barriales hasta la consolidación de
+                Club Deportivo Nogoyá no es solo una institución deportiva, es
+                el punto de encuentro de generaciones de familias. Desde los
+                primeros partidos de fútbol barriales hasta la consolidación de
                 un predio polideportivo completo, el club creció gracias al
                 trabajo desinteresado de comisiones directivas, socios y
                 vecinos.
               </p>
               <p className="text-muted small leading-relaxed mb-0">
                 Cada tribuna, cada cancha y cada rincón de la sede social lleva
-                la huella del esfuerzo colectivo y el orgullo por la camiseta
-                albinegra.
+                la huella del esfuerzo colectivo y el orgullo por nuestra
+                camiseta.
               </p>
             </div>
           </div>

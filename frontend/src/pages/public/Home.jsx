@@ -61,10 +61,10 @@ export default function Home() {
                 Nuestra Historia
               </h2>
               <p className="fs-5 text-dark lh-base">
-                Desde el 16 de diciembre de 1944, el Depor es el latido del
-                Barrio Lourdes. Nacido de la unión histórica entre el Nogoyá
-                Lawn Tenis Club y la Sociedad Sportiva, forjado por vecinos y
-                para vecinos con la pasión por el deporte y la pertenencia.
+                Desde el 16 de diciembre de 1944, Deportivo es el corazón del
+                Barrio Lourdes. Nacido de la unión histórica entre Nogoyá Lawn
+                Tenis Club y la Sociedad Sportiva, forjado por vecinos y para
+                vecinos con la pasión por el deporte y la pertenencia.
               </p>
               <Link to="/historia" className="btn btn-outline-dark mt-2">
                 Conocé nuestras raíces
