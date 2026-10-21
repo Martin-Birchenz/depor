@@ -3,6 +3,8 @@ import { NavLink, Outlet } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 
 export default function AdminLayout() {
+  // deploy update
+
   const { user, logout } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
 
