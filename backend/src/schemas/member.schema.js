@@ -30,6 +30,9 @@ const createMemberSchema = z.object({
     .nullable()
     .or(z.literal("")),
   status: z.enum(["active", "debtor", "inactive"]).default("active"),
+  category: z
+    .enum(["general", "cadete", "familiar", "vitalicio", "activo"])
+    .default("general"),
   memberNumber: z.number().int().positive().optional().nullable(),
 });
 

@@ -26,6 +26,13 @@ export default function AdminSocios() {
   });
   const [feedbackMsg, setFeedbackMsg] = useState(null);
 
+  const categoryLabels = {
+    general: "Socio General",
+    cadete: "Cadete / Juvenil",
+    familiar: "Grupo Familiar",
+    vitalicio: "Vitalicio",
+  };
+
   const fetchSocios = useCallback(async () => {
     try {
       const data = await getMembers();
@@ -105,7 +112,7 @@ export default function AdminSocios() {
         dni: "",
         email: "",
         phone: "",
-        category: "activo",
+        category: "general", // Resetea correctamente a la opción por defecto
       });
       fetchSocios();
       addToast("Socio registrado con éxito", "success");
@@ -190,7 +197,7 @@ export default function AdminSocios() {
                 filteredMembers.map((member) => {
                   const id = member.idmembers || member.id;
                   const name = `${member.first_name || member.firstName} ${member.last_name || member.lastName}`;
-                  const currentStatus = member.status || "activo";
+                  const currentStatus = member.status || "active";
 
                   return (
                     <tr key={id}>
@@ -202,7 +209,9 @@ export default function AdminSocios() {
                       </td>
                       <td>
                         <span className="badge bg-light text-dark border">
-                          {member.category || "General"}
+                          {categoryLabels[member.category] ||
+                            member.category ||
+                            "Socio General"}
                         </span>
                       </td>
                       <td>

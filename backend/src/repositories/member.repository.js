@@ -3,22 +3,30 @@ const pool = require("../config/db.js");
 class MemberRepository {
   async findByDni(dni) {
     const query = `
-            SELECT idmembers, dni, first_name, last_name, phone, email, status, member_number, created_at FROM members WHERE dni = ? LIMIT 1
-        `;
+      SELECT idmembers, dni, first_name, last_name, phone, email, status, category, member_number, created_at 
+      FROM members 
+      WHERE dni = ? 
+      LIMIT 1
+    `;
     const [rows] = await pool.execute(query, [dni]);
     return rows[0] || null;
   }
+
   async findByMemberNumber(memberNumber) {
     const query = `
-            SELECT idmembers, dni, first_name, last_name, phone, email, status, member_number, created_at FROM members WHERE member_number = ? LIMIT 1
-        `;
+      SELECT idmembers, dni, first_name, last_name, phone, email, status, category, member_number, created_at 
+      FROM members 
+      WHERE member_number = ? 
+      LIMIT 1
+    `;
     const [rows] = await pool.execute(query, [memberNumber]);
     return rows[0] || null;
   }
+
   async create(data) {
     const query = `
-      INSERT INTO members (dni, first_name, last_name, phone, email, status, member_number)
-      VALUES (?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO members (dni, first_name, last_name, phone, email, status, category, member_number)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
     const params = [
@@ -28,15 +36,19 @@ class MemberRepository {
       data.phone ?? null,
       data.email ?? null,
       data.status ?? "active",
+      data.category ?? "general",
       data.memberNumber ?? data.member_number ?? null,
     ];
 
     const [result] = await pool.execute(query, params);
     return result.insertId;
   }
+
   async findAll({ search, status }) {
     let query = `
-    SELECT idmembers, dni, first_name, last_name, phone, email, status, member_number, created_at FROM members WHERE 1=1 `;
+      SELECT idmembers, dni, first_name, last_name, phone, email, status, category, member_number, created_at 
+      FROM members 
+      WHERE 1=1 `;
 
     const params = [];
 
@@ -56,6 +68,7 @@ class MemberRepository {
     const [rows] = await pool.execute(query, params);
     return rows;
   }
+
   async updateStatus(id, status) {
     const query = `
       UPDATE members
@@ -65,9 +78,10 @@ class MemberRepository {
     const [result] = await pool.execute(query, [status, id]);
     return result.affectedRows > 0;
   }
+
   async findById(id) {
     const query = `
-      SELECT idmembers, dni, first_name, last_name, phone, email, status, member_number, created_at 
+      SELECT idmembers, dni, first_name, last_name, phone, email, status, category, member_number, created_at 
       FROM members 
       WHERE idmembers = ? 
       LIMIT 1
