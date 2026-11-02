@@ -16,6 +16,7 @@ const pelotaPaletaRoutes = require("./routes/pelotaPaleta.routes.js");
 const salonRoutes = require("./routes/salon.routes.js");
 const dashboardRoutes = require("./routes/dashboard.routes.js");
 const uploadRoutes = require("./routes/upload.routes.js");
+const paymentRoutes = require("./routes/payment.routes.js");
 
 const app = express();
 
@@ -66,6 +67,7 @@ app.use("/api/pelota-paleta", pelotaPaletaRoutes);
 app.use("/api/salon", salonRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/photo", uploadRoutes);
+app.use("/api/payment", paymentRoutes);
 
 app.use(errorHandler);
 

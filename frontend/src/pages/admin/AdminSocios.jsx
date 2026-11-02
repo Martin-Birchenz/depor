@@ -486,7 +486,7 @@ export default function AdminSocios() {
                       <label className="form-label small fw-bold">CUIT</label>
                       <input
                         type="text"
-                        placeholder="Opcional / Fiscal"
+                        placeholder="Opcional"
                         className="form-control form-control-sm"
                         value={newMember.cuit}
                         onChange={(e) =>
@@ -654,8 +654,7 @@ export default function AdminSocios() {
 
                         {newMember.familyMembers.length === 0 ? (
                           <p className="text-muted small mb-0">
-                            No se han agregado familiares. Hacé clic en "+
-                            Agregar Integrante" para sumarlos.
+                            No se han agregado familiares.
                           </p>
                         ) : (
                           newMember.familyMembers.map((fam, index) => (

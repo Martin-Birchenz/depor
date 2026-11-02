@@ -1,7 +1,11 @@
 import { Link, NavLink } from "react-router-dom";
 import logo from "../../assets/logo-deportivo.png";
+import { useState } from "react";
+import ModalPagarCuota from "../public/ModalPagarCuota.jsx";
 
 export default function Navbar() {
+  const [showPagarCuota, setShowPagarCuota] = useState(false);
+
   return (
     <nav className="navbar navbar-expand-lg navbar-dark bg-black sticky-top border-bottom border-dark">
       <div className="container">
@@ -95,6 +99,13 @@ export default function Navbar() {
                 Hacete socio
               </Link>
             </li>
+            <button
+              type="button"
+              className="btn btn-outline-light btn-sm fw-bold ms-lg-2"
+              onClick={() => setShowPagarCuota(true)}
+            >
+              Pagar cuota mensual
+            </button>
             <li className="nav-item">
               <Link
                 to="/admin/login"
@@ -106,6 +117,10 @@ export default function Navbar() {
           </ul>
         </div>
       </div>
+      <ModalPagarCuota
+        show={showPagarCuota}
+        onClose={() => setShowPagarCuota(false)}
+      />
     </nav>
   );
 }
