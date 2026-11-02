@@ -22,7 +22,10 @@ export default function ModalPagarCuota({ show, onClose }) {
       const data = await res.json();
 
       if (!res.ok) {
-        throw new Error(data.message || "Error al consultar estado");
+        throw new Error(
+          data.message ||
+            "No se encontró ningún socio con ese DNI o N° de socio.",
+        );
       }
 
       setResult(data);

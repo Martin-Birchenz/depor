@@ -99,13 +99,16 @@ export default function Navbar() {
                 Hacete socio
               </Link>
             </li>
-            <button
-              type="button"
-              className="btn btn-outline-light btn-sm fw-bold ms-lg-2"
-              onClick={() => setShowPagarCuota(true)}
-            >
-              Pagar cuota mensual
-            </button>
+            <li className="nav-item">
+              <button
+                type="button"
+                className="btn btn-light fw-bold text-dark ms-lg-2 my-2 my-lg-0"
+                onClick={() => setShowPagarCuota(true)}
+              >
+                Pagar cuota
+              </button>
+            </li>
+
             <li className="nav-item">
               <Link
                 to="/admin/login"

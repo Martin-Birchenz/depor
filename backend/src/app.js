@@ -67,7 +67,7 @@ app.use("/api/pelota-paleta", pelotaPaletaRoutes);
 app.use("/api/salon", salonRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/photo", uploadRoutes);
-app.use("/api/payment", paymentRoutes);
+app.use("/api/payments", paymentRoutes);
 
 app.use(errorHandler);
 

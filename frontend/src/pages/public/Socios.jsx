@@ -176,15 +176,21 @@ export default function Socios() {
         </p>
       </div>
 
-      <div className="alert alert-light border text-center mb-4 p-3">
-        ¿Ya formás parte del club?{" "}
-        <button
-          type="button"
-          className="btn btn-link p-0 fw-bold text-dark text-decoration-underline"
-          onClick={() => setShowPagarCuota(true)}
-        >
-          Ingresá acá para abonar tu cuota mensual
-        </button>
+      <div className="card bg-white border shadow-sm text-center mb-4 p-4">
+        <h5 className="fw-bold mb-1">¿Ya formás parte de El Depor?</h5>
+        <p className="text-muted small mb-3">
+          Si ya sos socio activo, podés consultar tu estado y abonar tu cuota
+          mensual acá.
+        </p>
+        <div>
+          <button
+            type="button"
+            className="btn btn-dark fw-bold px-4 py-2"
+            onClick={() => setShowPagarCuota(true)}
+          >
+            Pagar mi cuota mensual
+          </button>
+        </div>
       </div>
 
       <ModalPagarCuota
