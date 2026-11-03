@@ -177,7 +177,7 @@ export default function Socios() {
       </div>
 
       <div className="card bg-white border shadow-sm text-center mb-5 p-4">
-        <h5 className="fw-bold mb-1">¿Ya formás parte de el club?</h5>
+        <h5 className="fw-bold mb-3">¿Ya formás parte de el club?</h5>
         <div>
           <button
             type="button"

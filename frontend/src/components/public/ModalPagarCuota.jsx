@@ -157,7 +157,7 @@ export default function ModalPagarCuota({ show, onClose }) {
                     >
                       {paying
                         ? "Redirigiendo a Mercado Pago..."
-                        : "Pagar con Mercado Pago / Tarjetas"}
+                        : "Pagar con Mercado Pago "}
                     </button>
                   </div>
                 )}
