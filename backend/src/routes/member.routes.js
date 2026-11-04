@@ -31,4 +31,6 @@ router.patch(
   (req, res, next) => memberController.updateStatus(req, res, next),
 );
 
+router.post("/:id/prepaid-plan", memberController.applyPrepaidPlan);
+
 module.exports = router;

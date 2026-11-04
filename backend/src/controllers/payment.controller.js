@@ -1,7 +1,7 @@
 const { preferenceClient, paymentClient } = require("../config/mercadopago.js");
 const memberRepository = require("../repositories/member.repository.js");
 
-// Valor fijo de cuota mensual (configurable por variable de entorno o fallback fijo)
+// Valor fijo de cuota mensual
 const CUOTA_MENSUAL = Number(process.env.VALOR_CUOTA_SOCIO) || 5000;
 
 class PaymentController {
@@ -80,7 +80,7 @@ class PaymentController {
           items: [
             {
               id: `cuota-${member.idmembers}`,
-              title: `Cuota Social El Depor - Socio #${member.member_number || member.idmembers}`,
+              title: `Cuota Social Club Deportivo Nogoyá - Socio #${member.member_number || member.idmembers}`,
               description: `Abono de cuota para ${member.first_name} ${member.last_name}`,
               quantity: 1,
               unit_price: CUOTA_MENSUAL,
@@ -129,7 +129,8 @@ class PaymentController {
 
           if (externalRef && externalRef.startsWith("member_fee:")) {
             const memberId = externalRef.split(":")[1];
-            await memberRepository.updateStatus(memberId, "active");
+            // Extiende 1 mes el vencimiento y lo deja activo
+            await memberRepository.extendRegularMonth(memberId);
           }
         }
       }

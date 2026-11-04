@@ -43,6 +43,30 @@ class MemberController {
       next(error);
     }
   }
+  async applyPrepaidPlan(req, res, next) {
+    try {
+      const { id } = req.params;
+      const { months, planName, amountPaid } = req.body;
+
+      if (!months || months <= 0) {
+        return res
+          .status(400)
+          .json({ message: "La cantidad de meses debe ser mayor a 0" });
+      }
+
+      const result = await memberRepository.applyPrepaidPlan(id, {
+        months,
+        planName,
+        amountPaid,
+      });
+      return res.status(200).json({
+        message: `Plan asignado con éxito. Cuota cubierta hasta ${result.paidUntil}`,
+        paidUntil: result.paidUntil,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 
 module.exports = new MemberController();

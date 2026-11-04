@@ -2,6 +2,8 @@ require("dotenv").config();
 const app = require("./src/app.js");
 const pool = require("./src/config/db.js");
 
+const { initCronJobs } = require("./src/services/cron.service.js");
+
 const PORT = process.env.PORT;
 
 async function startServer() {
@@ -20,3 +22,4 @@ async function startServer() {
 }
 
 startServer();
+initCronJobs();
