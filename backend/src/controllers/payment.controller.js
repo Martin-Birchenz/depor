@@ -57,54 +57,52 @@ class PaymentController {
   // 2. Crear preferencia para abonar cuota de socio existente
   async createMemberPaymentPreference(req, res, next) {
     try {
-      const { memberId } = req.body;
-      const member = await memberRepository.findById(memberId);
+      const { memberId, months = 1 } = req.body;
+      const monthsQty = Math.max(1, Number(months));
 
+      const member = await memberRepository.findById(memberId);
       if (!member) {
         return res.status(404).json({ message: "Socio no encontrado" });
       }
 
-      if (member.category === "honorario") {
-        return res
-          .status(400)
-          .json({ message: "Los socios honorarios están exentos de cuota." });
-      }
-
-      const clientUrl =
-        process.env.CLIENT_URL || "https://depor-club.vercel.app";
-      const backendUrl =
-        process.env.BACKEND_URL || "https://depor-z5fe.onrender.com";
+      const totalAmount = CUOTA_MENSUAL * monthsQty;
+      const title =
+        monthsQty === 1
+          ? "Cuota Social Mensual - El Depor"
+          : `Abono de ${monthsQty} Cuotas Sociales - El Depor`;
 
       const preference = await preferenceClient.create({
         body: {
           items: [
             {
-              id: `cuota-${member.idmembers}`,
-              title: `Cuota Social Club Deportivo Nogoyá - Socio #${member.member_number || member.idmembers}`,
-              description: `Abono de cuota para ${member.first_name} ${member.last_name}`,
+              id: `fee_${member.idmembers || member.id}`,
+              title: title,
               quantity: 1,
-              unit_price: CUOTA_MENSUAL,
+              unit_price: totalAmount,
               currency_id: "ARS",
             },
           ],
           payer: {
-            name: member.first_name,
-            surname: member.last_name,
+            name: member.first_name || "Socio",
+            surname: member.last_name || "Depor",
             email: member.email || "socio@eldepor.com.ar",
           },
-          external_reference: `member_fee:${member.idmembers}`,
+          // Guardamos tanto el memberId como la cantidad de meses en la referencia externa
+          external_reference: `member_fee:${member.idmembers || member.id}:${monthsQty}`,
           back_urls: {
-            success: `${clientUrl}/pago-exitoso`,
-            failure: `${clientUrl}/pago-fallido`,
-            pending: `${clientUrl}/pago-pendiente`,
+            success: `${process.env.FRONTEND_URL || "http://localhost:5173"}/socios?status=success`,
+            failure: `${process.env.FRONTEND_URL || "http://localhost:5173"}/socios?status=failure`,
+            pending: `${process.env.FRONTEND_URL || "http://localhost:5173"}/socios?status=pending`,
           },
           auto_return: "approved",
-          notification_url: `${backendUrl}/api/payments/webhook`,
         },
       });
 
       return res.status(200).json({
         initPoint: preference.init_point,
+        sandboxInitPoint: preference.sandbox_init_point,
+        totalAmount,
+        months: monthsQty,
       });
     } catch (error) {
       next(error);
@@ -128,9 +126,12 @@ class PaymentController {
           const externalRef = payment.external_reference;
 
           if (externalRef && externalRef.startsWith("member_fee:")) {
-            const memberId = externalRef.split(":")[1];
-            // Extiende 1 mes el vencimiento y lo deja activo
-            await memberRepository.extendRegularMonth(memberId);
+            const parts = externalRef.split(":");
+            const memberId = parts[1];
+            const months = parts[2] ? Number(parts[2]) : 1;
+
+            // Extiende X meses
+            await memberRepository.extendMonths(memberId, months);
           }
         }
       }

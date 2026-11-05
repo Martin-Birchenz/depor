@@ -201,6 +201,29 @@ class MemberRepository {
     const [result] = await pool.execute(query, [today]);
     return result.affectedRows;
   }
+
+  async extendMonths(id, months = 1) {
+    const member = await this.findById(id);
+    if (!member) return false;
+
+    const now = new Date();
+    let baseDate =
+      member.paid_until && new Date(member.paid_until) > now
+        ? new Date(member.paid_until)
+        : now;
+
+    baseDate.setMonth(baseDate.getMonth() + Number(months));
+    const newPaidUntil = baseDate.toISOString().split("T")[0];
+
+    const query = `
+    UPDATE members 
+    SET status = 'active', 
+        paid_until = ? 
+    WHERE idmembers = ?
+  `;
+    const [result] = await pool.execute(query, [newPaidUntil, id]);
+    return result.affectedRows > 0;
+  }
 }
 
 module.exports = new MemberRepository();

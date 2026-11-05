@@ -193,14 +193,32 @@ export default function AdminSocios() {
     }
   };
 
+  const CUOTA_VALOR_ADMIN = 5000; // Valor cuota del club
+
+  // En openPlanModal:
   const openPlanModal = (member) => {
     setSelectedMember(member);
+    const initialMonths = 12;
     setPlanForm({
-      months: 12,
+      months: initialMonths,
       planName: "Iluminación Cancha 3 Tenis",
-      amountPaid: "",
+      amountPaid: initialMonths * CUOTA_VALOR_ADMIN,
+      isSpecialException: false,
+      exceptionReason: "",
     });
     setShowPlanModal(true);
+  };
+
+  // Al cambiar los meses, autocalcular el monto sugerido:
+  const handleMonthsChange = (newMonths) => {
+    const m = Number(newMonths);
+    setPlanForm((prev) => ({
+      ...prev,
+      months: m,
+      amountPaid: prev.isSpecialException
+        ? prev.amountPaid
+        : m * CUOTA_VALOR_ADMIN,
+    }));
   };
 
   const handlePlanSubmit = async (e) => {
@@ -520,7 +538,7 @@ export default function AdminSocios() {
         </div>
       </div>
 
-      {/* Modal Carga Plan Adelantado / Obras */}
+      {/* Modal Plan Obra con Congruencia */}
       {showPlanModal && selectedMember && (
         <div
           className="modal fade show d-block"
@@ -531,7 +549,7 @@ export default function AdminSocios() {
             <div className="modal-content border-0 shadow">
               <div className="modal-header bg-dark text-white">
                 <h5 className="modal-title fw-bold">
-                  Plan anticipado / Aporte obras y proyectos
+                  Plan Anticipado / Aporte Obras
                 </h5>
                 <button
                   type="button"
@@ -552,12 +570,11 @@ export default function AdminSocios() {
 
                   <div className="mb-3">
                     <label className="form-label small fw-bold">
-                      Motivo / Proyecto *
+                      Motivo / Obra *
                     </label>
                     <input
                       type="text"
                       required
-                      placeholder="Ej: Iluminación Cancha 3 Tenis / Compra Terreno"
                       className="form-control form-control-sm"
                       value={planForm.planName}
                       onChange={(e) =>
@@ -574,12 +591,7 @@ export default function AdminSocios() {
                       <select
                         className="form-select form-select-sm"
                         value={planForm.months}
-                        onChange={(e) =>
-                          setPlanForm({
-                            ...planForm,
-                            months: Number(e.target.value),
-                          })
-                        }
+                        onChange={(e) => handleMonthsChange(e.target.value)}
                       >
                         <option value={3}>3 meses</option>
                         <option value={6}>6 meses (Semestre)</option>
@@ -589,13 +601,19 @@ export default function AdminSocios() {
                         <option value={48}>48 meses (4 Años)</option>
                       </select>
                     </div>
+
                     <div className="col-6">
                       <label className="form-label small fw-bold">
-                        Monto total aportado ($)
+                        Monto aportado ($) *
                       </label>
                       <input
                         type="number"
-                        placeholder="Ej: 120000"
+                        required
+                        min={
+                          planForm.isSpecialException
+                            ? 1
+                            : planForm.months * CUOTA_VALOR_ADMIN
+                        }
                         className="form-control form-control-sm"
                         value={planForm.amountPaid}
                         onChange={(e) =>
@@ -605,14 +623,64 @@ export default function AdminSocios() {
                           })
                         }
                       />
+                      <small
+                        className="text-muted"
+                        style={{ fontSize: "11px" }}
+                      >
+                        Mínimo regular: $
+                        {(planForm.months * CUOTA_VALOR_ADMIN).toLocaleString(
+                          "es-AR",
+                        )}
+                      </small>
                     </div>
                   </div>
 
+                  {/* Checkbox de Excepción autorizada */}
+                  <div className="form-check mb-2">
+                    <input
+                      className="form-check-input"
+                      type="checkbox"
+                      id="checkException"
+                      checked={planForm.isSpecialException}
+                      onChange={(e) =>
+                        setPlanForm({
+                          ...planForm,
+                          isSpecialException: e.target.checked,
+                        })
+                      }
+                    />
+                    <label
+                      className="form-check-label small"
+                      htmlFor="checkException"
+                    >
+                      Tarifa especial o bonificación autorizada por Comisión
+                    </label>
+                  </div>
+
+                  {planForm.isSpecialException && (
+                    <div className="mb-3">
+                      <label className="form-label small fw-bold">
+                        Motivo / N° de Acta *
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="Ej: Acta 142/2026 - Convenio especial"
+                        className="form-control form-control-sm"
+                        value={planForm.exceptionReason}
+                        onChange={(e) =>
+                          setPlanForm({
+                            ...planForm,
+                            exceptionReason: e.target.value,
+                          })
+                        }
+                      />
+                    </div>
+                  )}
+
                   <div className="alert alert-info py-2 small mb-0">
-                    Al confirmar, el sistema extenderá automáticamente la fecha
-                    de vencimiento del socio por{" "}
-                    <strong>{planForm.months} meses</strong> y no pasará a
-                    deudor hasta cumplido el período.
+                    Cubre hasta: <strong>{planForm.months} meses</strong>. Fecha
+                    de vencimiento recalculada en automático.
                   </div>
                 </div>
 
