@@ -30,6 +30,35 @@ export default function AdminSalon() {
     notes: "",
   });
 
+  // Formateadores visuales
+  const formatDateAR = (dateStr) => {
+    if (!dateStr) return "-";
+    const [year, month, day] = dateStr.split("T")[0].split("-");
+    if (!year || !month || !day) return dateStr;
+    return `${day}/${month}/${year}`;
+  };
+
+  const formatCurrency = (amount) => {
+    return Number(amount || 0).toLocaleString("es-AR", {
+      style: "currency",
+      currency: "ARS",
+      maximumFractionDigits: 0,
+    });
+  };
+
+  const formatShiftLabel = (shift, startTime, endTime) => {
+    if (shift === "noche") return "Noche (19:00 a 05:00 hs)";
+    if (shift === "mediodia") return "Mediodía (11:00 a 17:00 hs)";
+    if (shift === "completo") return "Jornada Completa";
+    if (startTime && endTime) {
+      const s = startTime.substring(0, 5);
+      const e =
+        endTime.substring(0, 5) === "00:00" ? "00:00" : endTime.substring(0, 5);
+      return `${s} a ${e} hs`;
+    }
+    return shift || "Turno asignado";
+  };
+
   async function loadFacilities() {
     try {
       const data = await getSalonFacilities();
@@ -43,7 +72,7 @@ export default function AdminSalon() {
       }
     } catch {
       setFeedback({
-        error: "Error al cargar instalaciones de salón",
+        error: "Error al cargar las instalaciones de Salón y Parrillas",
         success: null,
       });
     }
@@ -56,7 +85,7 @@ export default function AdminSalon() {
       setReservations(data);
     } catch {
       setFeedback({
-        error: "Error al cargar reservas de salón",
+        error: "Error al cargar el cronograma de alquileres",
         success: null,
       });
     } finally {
@@ -102,10 +131,13 @@ export default function AdminSalon() {
         client_phone: "",
         notes: "",
       }));
-      addToast("Evento agendado con éxito", "success");
+      addToast("Alquiler agendado con éxito", "success");
     } catch (err) {
-      addToast("Error al agendar el evento.", "error");
-      console.error(err);
+      const errMsg =
+        err.response?.data?.message ||
+        "El sector ya cuenta con un evento agendado para esa fecha y franja horaria.";
+      setFeedback({ error: errMsg, success: null });
+      addToast(errMsg, "error");
     }
   };
 
@@ -113,25 +145,25 @@ export default function AdminSalon() {
     try {
       await updateSalonReservationStatus(id, status);
       loadReservations(currentMonth, currentYear);
-      addToast("Evento actualizado con éxito", "success");
+      addToast("Estado de reserva actualizado", "success");
     } catch {
-      addToast("Error al actualizar el evento.", "error");
+      addToast("Error al actualizar la reserva.", "error");
     }
   };
 
   return (
     <div className="container-fluid py-4">
-      <div className="d-flex justify-content-between align-items-center mb-4">
+      <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
         <div>
-          <h2 className="fw-bold mb-1">Subcomisión de Salón y Quinchos</h2>
+          <h2 className="fw-bold mb-1">Alquiler de Salón y Sector Parrillas</h2>
           <span className="text-muted small">
-            Gestión de alquileres por jornada y eventos sociales
+            Control de reservas por turnos, celebraciones y eventos sociales
           </span>
         </div>
 
         <div className="d-flex gap-2">
           <select
-            className="form-select w-auto"
+            className="form-select form-select-sm w-auto"
             value={currentMonth}
             onChange={(e) => setCurrentMonth(Number(e.target.value))}
           >
@@ -156,7 +188,7 @@ export default function AdminSalon() {
           </select>
           <input
             type="number"
-            className="form-control w-auto"
+            className="form-control form-control-sm w-auto"
             value={currentYear}
             onChange={(e) => setCurrentYear(Number(e.target.value))}
           />
@@ -164,23 +196,42 @@ export default function AdminSalon() {
       </div>
 
       {feedback.error && (
-        <div className="alert alert-danger py-2">{feedback.error}</div>
+        <div
+          className="alert alert-danger alert-dismissible fade show py-2 small"
+          role="alert"
+        >
+          <strong>Atención:</strong> {feedback.error}
+          <button
+            type="button"
+            className="btn-close py-2"
+            onClick={() => setFeedback({ ...feedback, error: null })}
+          ></button>
+        </div>
       )}
       {feedback.success && (
-        <div className="alert alert-success py-2">{feedback.success}</div>
+        <div
+          className="alert alert-success alert-dismissible fade show py-2 small"
+          role="alert"
+        >
+          {feedback.success}
+          <button
+            type="button"
+            className="btn-close py-2"
+            onClick={() => setFeedback({ ...feedback, success: null })}
+          ></button>
+        </div>
       )}
 
       <div className="row g-4">
+        {/* Formulario de Reserva */}
         <div className="col-lg-4">
-          <div className="card shadow-sm border-0 p-3">
-            <h5 className="fw-bold mb-3">Reservar Salón / Parrilla</h5>
+          <div className="card shadow-sm border-0 p-3 bg-white">
+            <h5 className="fw-bold mb-3">Registrar Nuevo Alquiler</h5>
             <form onSubmit={handleCreateReservation}>
               <div className="mb-2">
-                <label className="form-label small fw-bold">
-                  Instalación / Sector
-                </label>
+                <label className="form-label small fw-bold">Sector *</label>
                 <select
-                  className="form-select"
+                  className="form-select form-select-sm"
                   value={form.facility_id}
                   onChange={(e) => handleFacilityChange(e.target.value)}
                 >
@@ -194,12 +245,12 @@ export default function AdminSalon() {
 
               <div className="mb-2">
                 <label className="form-label small fw-bold">
-                  Fecha del Evento
+                  Fecha del Evento *
                 </label>
                 <input
                   type="date"
                   required
-                  className="form-control"
+                  className="form-control form-control-sm"
                   value={form.reservation_date}
                   onChange={(e) =>
                     setForm({ ...form, reservation_date: e.target.value })
@@ -209,10 +260,10 @@ export default function AdminSalon() {
 
               <div className="mb-2">
                 <label className="form-label small fw-bold">
-                  Jornada / Franja
+                  Franja Horaria *
                 </label>
                 <select
-                  className="form-select"
+                  className="form-select form-select-sm"
                   value={form.shift}
                   onChange={(e) => setForm({ ...form, shift: e.target.value })}
                 >
@@ -224,12 +275,13 @@ export default function AdminSalon() {
 
               <div className="mb-2">
                 <label className="form-label small fw-bold">
-                  Responsable / Contratante
+                  Responsable / Contratante *
                 </label>
                 <input
                   type="text"
                   required
-                  className="form-control"
+                  placeholder="Nombre y Apellido"
+                  className="form-control form-control-sm"
                   value={form.client_name}
                   onChange={(e) =>
                     setForm({ ...form, client_name: e.target.value })
@@ -239,12 +291,13 @@ export default function AdminSalon() {
 
               <div className="mb-2">
                 <label className="form-label small fw-bold">
-                  Teléfono de Contacto
+                  Teléfono de Contacto *
                 </label>
                 <input
                   type="text"
                   required
-                  className="form-control"
+                  placeholder="Ej: 3435123456"
+                  className="form-control form-control-sm"
                   value={form.client_phone}
                   onChange={(e) =>
                     setForm({ ...form, client_phone: e.target.value })
@@ -252,14 +305,14 @@ export default function AdminSalon() {
                 />
               </div>
 
-              <div className="row mb-2">
+              <div className="row g-2 mb-2">
                 <div className="col-6">
                   <label className="form-label small fw-bold">
                     Precio Total ($)
                   </label>
                   <input
                     type="number"
-                    className="form-control"
+                    className="form-control form-control-sm"
                     value={form.final_price}
                     onChange={(e) =>
                       setForm({ ...form, final_price: e.target.value })
@@ -268,10 +321,10 @@ export default function AdminSalon() {
                 </div>
                 <div className="col-6">
                   <label className="form-label small fw-bold">
-                    Estado Pago
+                    Estado del Pago
                   </label>
                   <select
-                    className="form-select"
+                    className="form-select form-select-sm"
                     value={form.payment_method}
                     onChange={(e) =>
                       setForm({ ...form, payment_method: e.target.value })
@@ -279,6 +332,7 @@ export default function AdminSalon() {
                   >
                     <option value="pendiente">Seña / Pendiente</option>
                     <option value="efectivo">Efectivo Total</option>
+                    <option value="transferencia">Transferencia</option>
                     <option value="mercadopago">Mercado Pago</option>
                   </select>
                 </div>
@@ -286,43 +340,47 @@ export default function AdminSalon() {
 
               <div className="mb-3">
                 <label className="form-label small fw-bold">
-                  Detalles / Vajilla / Seña
+                  Notas / Vajilla / Seña
                 </label>
                 <textarea
                   rows="2"
-                  placeholder="Ej: Seña $10.000 abonada."
-                  className="form-control"
+                  placeholder="Ej: Dejó $15.000 de seña. Incluye limpieza."
+                  className="form-control form-control-sm"
                   value={form.notes}
                   onChange={(e) => setForm({ ...form, notes: e.target.value })}
                 />
               </div>
 
-              <button type="submit" className="btn btn-dark w-100 py-2">
+              <button
+                type="submit"
+                className="btn btn-dark w-100 py-2 fw-bold btn-sm"
+              >
                 Confirmar Alquiler
               </button>
             </form>
           </div>
         </div>
 
+        {/* Tabla de Eventos */}
         <div className="col-lg-8">
-          <div className="card shadow-sm border-0 p-3">
+          <div className="card shadow-sm border-0 p-3 bg-white">
             <h5 className="fw-bold mb-3">Agenda de Eventos Programados</h5>
 
             {loading ? (
-              <LoadingSpinner message="Cargando eventos..." />
+              <LoadingSpinner message="Cargando agenda..." />
             ) : reservations.length === 0 ? (
               <p className="text-muted text-center py-4">
-                No hay eventos agendados para este mes.
+                No hay alquileres agendados para este período.
               </p>
             ) : (
               <div className="table-responsive">
-                <table className="table align-middle">
-                  <thead className="table-light">
+                <table className="table table-hover align-middle mb-0">
+                  <thead className="table-light small text-uppercase">
                     <tr>
                       <th>Fecha</th>
                       <th>Sector</th>
                       <th>Responsable</th>
-                      <th>Monto / Pago</th>
+                      <th>Monto Total</th>
                       <th>Estado</th>
                       <th className="text-end">Acciones</th>
                     </tr>
@@ -330,29 +388,50 @@ export default function AdminSalon() {
                   <tbody>
                     {reservations.map((r) => (
                       <tr key={r.idreservations}>
-                        <td className="fw-bold">
-                          {r.reservation_date}
-                          <div className="small text-muted">
-                            {r.start_time} - {r.end_time}
+                        <td>
+                          <div className="fw-bold text-dark">
+                            {formatDateAR(r.reservation_date)}
+                          </div>
+                          <div
+                            className="text-muted"
+                            style={{ fontSize: "11px" }}
+                          >
+                            {formatShiftLabel(
+                              r.shift,
+                              r.start_time,
+                              r.end_time,
+                            )}
                           </div>
                         </td>
-                        <td>{r.facility_name}</td>
                         <td>
-                          <div>{r.client_name}</div>
-                          <small className="text-muted">{r.client_phone}</small>
-                          {r.notes && (
-                            <div className="text-muted small">{r.notes}</div>
-                          )}
+                          <span className="badge bg-light text-dark border">
+                            {r.facility_name || r.court_name || "Sector"}
+                          </span>
                         </td>
                         <td>
+                          <div className="fw-bold text-dark">
+                            {r.client_name}
+                          </div>
+                          <small className="text-muted">{r.client_phone}</small>
+                          {r.notes && (
+                            <div className="text-muted small fst-italic">
+                              {r.notes}
+                            </div>
+                          )}
+                        </td>
+                        <td className="small">
+                          <div className="fw-bold">
+                            {formatCurrency(r.final_price)}
+                          </div>
                           <span
                             className={`badge ${
                               r.payment_method === "pendiente"
                                 ? "bg-warning text-dark"
                                 : "bg-info text-dark"
                             }`}
+                            style={{ fontSize: "10px" }}
                           >
-                            {r.payment_method} (${r.final_price})
+                            {r.payment_method}
                           </span>
                         </td>
                         <td>
@@ -362,7 +441,7 @@ export default function AdminSalon() {
                                 ? "bg-success"
                                 : r.status === "cancelada"
                                   ? "bg-danger"
-                                  : "bg-primary"
+                                  : "bg-secondary"
                             }`}
                           >
                             {r.status}
@@ -370,9 +449,9 @@ export default function AdminSalon() {
                         </td>
                         <td className="text-end">
                           {r.status === "confirmada" && (
-                            <>
+                            <div className="btn-group btn-group-sm">
                               <button
-                                className="btn btn-sm btn-outline-success me-1"
+                                className="btn btn-outline-success btn-sm"
                                 onClick={() =>
                                   handleStatusChange(
                                     r.idreservations,
@@ -383,7 +462,7 @@ export default function AdminSalon() {
                                 Finalizar
                               </button>
                               <button
-                                className="btn btn-sm btn-outline-danger"
+                                className="btn btn-outline-danger btn-sm"
                                 onClick={() =>
                                   handleStatusChange(
                                     r.idreservations,
@@ -393,7 +472,7 @@ export default function AdminSalon() {
                               >
                                 Cancelar
                               </button>
-                            </>
+                            </div>
                           )}
                         </td>
                       </tr>

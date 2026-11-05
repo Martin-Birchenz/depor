@@ -55,32 +55,29 @@ const createPelotaPaletaReservation = async (req, res, next) => {
       return res.status(401).json({ message: "Usuario no autenticado" });
     }
 
+    // Validación estricta y limpia de solapamiento
     const [existing] = await pool.query(
       `SELECT idreservations FROM reservations 
        WHERE facility_id = ? 
          AND reservation_date = ? 
          AND status != 'cancelada'
-         AND (
-           (start_time <= ? AND end_time > ?) OR
-           (start_time < ? AND end_time >= ?) OR
-           (start_time >= ? AND end_time <= ?)
-         )`,
+         AND start_time < ? 
+         AND end_time > ?`,
       [
         parsedData.facility_id,
         parsedData.reservation_date,
-        parsedData.start_time,
-        parsedData.start_time,
-        parsedData.end_time,
-        parsedData.end_time,
-        parsedData.start_time,
-        parsedData.end_time,
+        parsedData.end_time, // start_time existente < nuevo end_time
+        parsedData.start_time, // end_time existente > nuevo start_time
       ],
     );
 
     if (existing.length > 0) {
       return res
         .status(409)
-        .json({ message: "El Trinquete ya está ocupado en ese horario" });
+        .json({
+          message:
+            "La cancha de Pelota Paleta ya se encuentra ocupada en ese horario.",
+        });
     }
 
     const [result] = await pool.query(
