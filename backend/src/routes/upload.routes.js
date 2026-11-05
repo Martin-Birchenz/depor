@@ -2,7 +2,6 @@ const express = require("express");
 const router = express.Router();
 const multer = require("multer");
 const { v2: cloudinary } = require("cloudinary");
-const { CloudinaryStorage } = require("multer-storage-cloudinary");
 
 // Configuración de Cloudinary
 cloudinary.config({
@@ -11,33 +10,46 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-// Storage en memoria/Cloudinary
-const storage = new CloudinaryStorage({
-  cloudinary: cloudinary,
-  params: {
-    folder: "depor_socios",
-    allowed_formats: ["jpg", "png", "jpeg", "webp"],
-    transformation: [{ width: 500, height: 500, crop: "limit" }],
-  },
+// Guardamos temporalmente el archivo en memoria RAM
+const storage = multer.memoryStorage();
+const upload = multer({
+  storage,
+  limits: { fileSize: 5 * 1024 * 1024 }, // Máximo 5MB
 });
 
-const upload = multer({ storage });
-
-router.post("/photo", upload.single("photo"), (req, res) => {
+router.post("/photo", upload.single("photo"), async (req, res) => {
   try {
-    if (!req.file || !req.file.path) {
+    if (!req.file) {
       return res
         .status(400)
         .json({ message: "No se subió ningún archivo de imagen." });
     }
-    return res.status(200).json({ url: req.file.path });
-  } catch (error) {
-    return res
-      .status(500)
-      .json({
-        message: "Error al procesar imagen en Cloudinary",
-        error: error.message,
+
+    // Subida mediante stream nativo de Cloudinary v2
+    const uploadStream = () => {
+      return new Promise((resolve, reject) => {
+        const stream = cloudinary.uploader.upload_stream(
+          {
+            folder: "depor_socios",
+            transformation: [{ width: 500, height: 500, crop: "limit" }],
+          },
+          (error, result) => {
+            if (error) return reject(error);
+            resolve(result);
+          },
+        );
+        stream.end(req.file.buffer);
       });
+    };
+
+    const result = await uploadStream();
+    return res.status(200).json({ url: result.secure_url });
+  } catch (error) {
+    console.error("Error al subir a Cloudinary:", error);
+    return res.status(500).json({
+      message: "Error al procesar imagen en Cloudinary",
+      error: error.message,
+    });
   }
 });
 
