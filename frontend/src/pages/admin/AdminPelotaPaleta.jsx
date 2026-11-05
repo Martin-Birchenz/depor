@@ -48,6 +48,21 @@ export default function AdminPelotaPaleta() {
   const [loading, setLoading] = useState(false);
   const [feedback, setFeedback] = useState({ error: null, success: null });
 
+  // Función para formatear el horario evitando el bug de "22 a 12"
+  const formatTimeRange = (start, end) => {
+    if (!start || !end) return "-";
+    const s = start.substring(0, 5);
+    let e = end.substring(0, 5);
+    if (
+      e === "00:00" ||
+      e === "24:00" ||
+      (e === "12:00" && (s.startsWith("22") || s.startsWith("23")))
+    ) {
+      e = "00:00";
+    }
+    return `${s} a ${e} hs`;
+  };
+
   async function loadCourts() {
     try {
       const data = await getPelotaPaletaCourts();
@@ -126,7 +141,11 @@ export default function AdminPelotaPaleta() {
       }));
       addToast("Turno reservado con éxito", "success");
     } catch (err) {
-      addToast("Error al reservar el turno.", "error");
+      const errMsg =
+        err.response?.data?.message ||
+        "La cancha de Pelota Paleta ya se encuentra ocupada en ese horario.";
+      setFeedback({ error: errMsg, success: null });
+      addToast(errMsg, "error");
       console.error(err);
     }
   };
@@ -136,7 +155,7 @@ export default function AdminPelotaPaleta() {
       await updatePelotaPaletaReservationStatus(id, status);
       loadReservations(selectedDate);
       addToast("Turno actualizado con éxito", "success");
-    } catch {
+    } catch (err) {
       addToast("Error al actualizar el turno.", "error");
       console.error(err);
     }
@@ -253,16 +272,36 @@ export default function AdminPelotaPaleta() {
       </div>
 
       {feedback.error && (
-        <div className="alert alert-danger py-2">{feedback.error}</div>
+        <div
+          className="alert alert-danger alert-dismissible fade show py-2 small"
+          role="alert"
+        >
+          <strong>Atención:</strong> {feedback.error}
+          <button
+            type="button"
+            className="btn-close py-2"
+            onClick={() => setFeedback({ ...feedback, error: null })}
+          ></button>
+        </div>
       )}
       {feedback.success && (
-        <div className="alert alert-success py-2">{feedback.success}</div>
+        <div
+          className="alert alert-success alert-dismissible fade show py-2 small"
+          role="alert"
+        >
+          {feedback.success}
+          <button
+            type="button"
+            className="btn-close py-2"
+            onClick={() => setFeedback({ ...feedback, success: null })}
+          ></button>
+        </div>
       )}
 
       {activeTab === "cancha" && (
         <div className="row g-4">
           <div className="col-lg-4">
-            <div className="card shadow-sm border-0 p-3">
+            <div className="card shadow-sm border-0 p-3 bg-white">
               <h5 className="fw-bold mb-3">Reservar Trinquete</h5>
               <form onSubmit={handleCreateReservation}>
                 <div className="mb-2">
@@ -270,7 +309,7 @@ export default function AdminPelotaPaleta() {
                     Instalación
                   </label>
                   <select
-                    className="form-select"
+                    className="form-select form-select-sm"
                     value={resForm.facility_id}
                     onChange={(e) =>
                       setResForm({ ...resForm, facility_id: e.target.value })
@@ -284,12 +323,12 @@ export default function AdminPelotaPaleta() {
                   </select>
                 </div>
 
-                <div className="row mb-2">
+                <div className="row g-2 mb-2">
                   <div className="col-6">
                     <label className="form-label small fw-bold">Desde</label>
                     <input
                       type="time"
-                      className="form-control"
+                      className="form-control form-control-sm"
                       value={resForm.start_time}
                       onChange={(e) =>
                         setResForm({ ...resForm, start_time: e.target.value })
@@ -300,7 +339,7 @@ export default function AdminPelotaPaleta() {
                     <label className="form-label small fw-bold">Hasta</label>
                     <input
                       type="time"
-                      className="form-control"
+                      className="form-control form-control-sm"
                       value={resForm.end_time}
                       onChange={(e) =>
                         setResForm({ ...resForm, end_time: e.target.value })
@@ -311,12 +350,13 @@ export default function AdminPelotaPaleta() {
 
                 <div className="mb-2">
                   <label className="form-label small fw-bold">
-                    Jugador / Contacto
+                    Jugador / Contacto *
                   </label>
                   <input
                     type="text"
                     required
-                    className="form-control"
+                    placeholder="Nombre y Apellido"
+                    className="form-control form-control-sm"
                     value={resForm.client_name}
                     onChange={(e) =>
                       setResForm({ ...resForm, client_name: e.target.value })
@@ -325,11 +365,12 @@ export default function AdminPelotaPaleta() {
                 </div>
 
                 <div className="mb-2">
-                  <label className="form-label small fw-bold">Teléfono</label>
+                  <label className="form-label small fw-bold">Teléfono *</label>
                   <input
                     type="text"
                     required
-                    className="form-control"
+                    placeholder="Ej: 3435123456"
+                    className="form-control form-control-sm"
                     value={resForm.client_phone}
                     onChange={(e) =>
                       setResForm({ ...resForm, client_phone: e.target.value })
@@ -337,14 +378,14 @@ export default function AdminPelotaPaleta() {
                   />
                 </div>
 
-                <div className="row mb-2">
+                <div className="row g-2 mb-2">
                   <div className="col-6">
                     <label className="form-label small fw-bold">
                       Precio ($)
                     </label>
                     <input
                       type="number"
-                      className="form-control"
+                      className="form-control form-control-sm"
                       value={resForm.final_price}
                       onChange={(e) =>
                         setResForm({ ...resForm, final_price: e.target.value })
@@ -354,7 +395,7 @@ export default function AdminPelotaPaleta() {
                   <div className="col-6">
                     <label className="form-label small fw-bold">Pago</label>
                     <select
-                      className="form-select"
+                      className="form-select form-select-sm"
                       value={resForm.payment_method}
                       onChange={(e) =>
                         setResForm({
@@ -365,6 +406,7 @@ export default function AdminPelotaPaleta() {
                     >
                       <option value="pendiente">Pendiente</option>
                       <option value="efectivo">Efectivo</option>
+                      <option value="transferencia">Transferencia</option>
                       <option value="mercadopago">Mercado Pago</option>
                     </select>
                   </div>
@@ -375,7 +417,7 @@ export default function AdminPelotaPaleta() {
                   <input
                     type="text"
                     placeholder="Pelotas, paletas prestadas, etc."
-                    className="form-control"
+                    className="form-control form-control-sm"
                     value={resForm.notes}
                     onChange={(e) =>
                       setResForm({ ...resForm, notes: e.target.value })
@@ -383,7 +425,10 @@ export default function AdminPelotaPaleta() {
                   />
                 </div>
 
-                <button type="submit" className="btn btn-dark w-100">
+                <button
+                  type="submit"
+                  className="btn btn-dark w-100 py-2 fw-bold btn-sm"
+                >
                   Confirmar Turno
                 </button>
               </form>
@@ -391,12 +436,12 @@ export default function AdminPelotaPaleta() {
           </div>
 
           <div className="col-lg-8">
-            <div className="card shadow-sm border-0 p-3">
+            <div className="card shadow-sm border-0 p-3 bg-white">
               <div className="d-flex justify-content-between align-items-center mb-3">
                 <h5 className="fw-bold mb-0">Turnos Programados</h5>
                 <input
                   type="date"
-                  className="form-control w-auto"
+                  className="form-control form-control-sm w-auto"
                   value={selectedDate}
                   onChange={(e) => {
                     setSelectedDate(e.target.value);
@@ -416,25 +461,40 @@ export default function AdminPelotaPaleta() {
                 </p>
               ) : (
                 <div className="table-responsive">
-                  <table className="table align-middle">
-                    <thead className="table-light">
+                  <table className="table table-hover align-middle mb-0">
+                    <thead className="table-light small text-uppercase">
                       <tr>
                         <th>Horario</th>
+                        <th>Cancha</th>
                         <th>Jugador</th>
                         <th>Pago</th>
                         <th>Estado</th>
-                        <th>Acción</th>
+                        <th className="text-end">Acción</th>
                       </tr>
                     </thead>
                     <tbody>
                       {reservations.map((r) => (
                         <tr key={r.idreservations}>
-                          <td className="fw-bold">{`${r.start_time} - ${r.end_time}`}</td>
+                          <td className="fw-bold text-dark">
+                            {formatTimeRange(r.start_time, r.end_time)}
+                          </td>
                           <td>
-                            <div>{r.client_name}</div>
+                            <span className="badge bg-light text-dark border">
+                              {r.court_name || "Trinquete"}
+                            </span>
+                          </td>
+                          <td>
+                            <div className="fw-bold text-dark">
+                              {r.client_name}
+                            </div>
                             <small className="text-muted">
                               {r.client_phone}
                             </small>
+                            {r.notes && (
+                              <div className="text-muted small fst-italic">
+                                {r.notes}
+                              </div>
+                            )}
                           </td>
                           <td>
                             <span
@@ -444,7 +504,8 @@ export default function AdminPelotaPaleta() {
                                   : "bg-info text-dark"
                               }`}
                             >
-                              {r.payment_method} (${r.final_price})
+                              {r.payment_method} ($
+                              {Number(r.final_price).toLocaleString("es-AR")})
                             </span>
                           </td>
                           <td>
@@ -460,7 +521,7 @@ export default function AdminPelotaPaleta() {
                               {r.status}
                             </span>
                           </td>
-                          <td>
+                          <td className="text-end">
                             {r.status === "confirmada" && (
                               <button
                                 className="btn btn-sm btn-outline-danger"
@@ -489,7 +550,7 @@ export default function AdminPelotaPaleta() {
       {activeTab === "buffet" && (
         <div className="row g-4">
           <div className="col-lg-7">
-            <div className="card shadow-sm border-0 p-3 mb-4">
+            <div className="card shadow-sm border-0 p-3 mb-4 bg-white">
               <h5 className="fw-bold mb-3">Productos Disponibles</h5>
               <div className="row g-2">
                 {products.length === 0 ? (
@@ -519,7 +580,7 @@ export default function AdminPelotaPaleta() {
               </div>
             </div>
 
-            <div className="card shadow-sm border-0 p-3">
+            <div className="card shadow-sm border-0 p-3 bg-white">
               <h6 className="fw-bold mb-2">Añadir Producto al Buffet</h6>
               <form onSubmit={handleCreateProduct} className="row g-2">
                 <div className="col-md-4">
@@ -576,7 +637,7 @@ export default function AdminPelotaPaleta() {
           </div>
 
           <div className="col-lg-5">
-            <div className="card shadow-sm border-0 p-3 mb-4">
+            <div className="card shadow-sm border-0 p-3 mb-4 bg-white">
               <h5 className="fw-bold mb-3">Ticket Actual</h5>
               {cart.length === 0 ? (
                 <p className="text-muted text-center py-4">
@@ -621,7 +682,7 @@ export default function AdminPelotaPaleta() {
                       Medio de Pago
                     </label>
                     <select
-                      className="form-select"
+                      className="form-select form-select-sm"
                       value={salePaymentMethod}
                       onChange={(e) => setSalePaymentMethod(e.target.value)}
                     >
@@ -632,7 +693,7 @@ export default function AdminPelotaPaleta() {
                   </div>
 
                   <button
-                    className="btn btn-dark w-100 py-2"
+                    className="btn btn-dark w-100 py-2 fw-bold"
                     onClick={handleCheckoutSale}
                   >
                     Cobrar Ticket
@@ -641,7 +702,7 @@ export default function AdminPelotaPaleta() {
               )}
             </div>
 
-            <div className="card shadow-sm border-0 p-3">
+            <div className="card shadow-sm border-0 p-3 bg-white">
               <h6 className="fw-bold mb-2">Últimas Ventas</h6>
               <div className="table-responsive">
                 <table className="table table-sm align-middle small mb-0">

@@ -30,6 +30,20 @@ export default function AdminPadel() {
     notes: "",
   });
 
+  const formatTimeRange = (start, end) => {
+    if (!start || !end) return "-";
+    const s = start.substring(0, 5);
+    let e = end.substring(0, 5);
+    if (
+      e === "00:00" ||
+      e === "24:00" ||
+      (e === "12:00" && (s.startsWith("22") || s.startsWith("23")))
+    ) {
+      e = "00:00";
+    }
+    return `${s} a ${e} hs`;
+  };
+
   async function loadCourts() {
     try {
       const data = await getPadelCourts();
@@ -100,7 +114,11 @@ export default function AdminPadel() {
       }));
       addToast("Turno registrado con éxito", "success");
     } catch (err) {
-      addToast("Error al registrar el turno.", "error");
+      const errMsg =
+        err.response?.data?.message ||
+        "La cancha ya se encuentra ocupada en ese horario. Por favor elegí otro turno.";
+      setFeedback({ error: errMsg, success: null });
+      addToast(errMsg, "error");
       console.error(err);
     }
   };
@@ -126,7 +144,7 @@ export default function AdminPadel() {
 
   return (
     <div className="container-fluid py-4">
-      <div className="d-flex justify-content-between align-items-center mb-4">
+      <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
         <div>
           <h2 className="fw-bold mb-1">Subcomisión de Pádel</h2>
           <span className="text-muted small">
@@ -137,7 +155,7 @@ export default function AdminPadel() {
           <label className="fw-bold small mb-0">Fecha:</label>
           <input
             type="date"
-            className="form-control"
+            className="form-control form-control-sm"
             value={selectedDate}
             onChange={(e) => {
               setSelectedDate(e.target.value);
@@ -151,15 +169,35 @@ export default function AdminPadel() {
       </div>
 
       {feedback.error && (
-        <div className="alert alert-danger py-2">{feedback.error}</div>
+        <div
+          className="alert alert-danger alert-dismissible fade show py-2 small"
+          role="alert"
+        >
+          <strong>Atención:</strong> {feedback.error}
+          <button
+            type="button"
+            className="btn-close py-2"
+            onClick={() => setFeedback({ ...feedback, error: null })}
+          ></button>
+        </div>
       )}
       {feedback.success && (
-        <div className="alert alert-success py-2">{feedback.success}</div>
+        <div
+          className="alert alert-success alert-dismissible fade show py-2 small"
+          role="alert"
+        >
+          {feedback.success}
+          <button
+            type="button"
+            className="btn-close py-2"
+            onClick={() => setFeedback({ ...feedback, success: null })}
+          ></button>
+        </div>
       )}
 
       <div className="row g-4">
         <div className="col-lg-4">
-          <div className="card shadow-sm border-0 p-3">
+          <div className="card shadow-sm border-0 p-3 bg-white">
             <h5 className="fw-bold mb-3">Nuevo Turno</h5>
 
             <label className="form-label small fw-bold text-muted mb-1">
@@ -192,7 +230,7 @@ export default function AdminPadel() {
               <div className="mb-2">
                 <label className="form-label small fw-bold">Cancha</label>
                 <select
-                  className="form-select"
+                  className="form-select form-select-sm"
                   value={form.facility_id}
                   onChange={(e) => handleCourtChange(e.target.value)}
                 >
@@ -204,12 +242,12 @@ export default function AdminPadel() {
                 </select>
               </div>
 
-              <div className="row mb-2">
+              <div className="row g-2 mb-2">
                 <div className="col-6">
                   <label className="form-label small fw-bold">Desde</label>
                   <input
                     type="time"
-                    className="form-control"
+                    className="form-control form-control-sm"
                     value={form.start_time}
                     onChange={(e) =>
                       setForm({ ...form, start_time: e.target.value })
@@ -220,7 +258,7 @@ export default function AdminPadel() {
                   <label className="form-label small fw-bold">Hasta</label>
                   <input
                     type="time"
-                    className="form-control"
+                    className="form-control form-control-sm"
                     value={form.end_time}
                     onChange={(e) =>
                       setForm({ ...form, end_time: e.target.value })
@@ -231,13 +269,13 @@ export default function AdminPadel() {
 
               <div className="mb-2">
                 <label className="form-label small fw-bold">
-                  Jugador / Contacto
+                  Jugador / Contacto *
                 </label>
                 <input
                   type="text"
                   required
                   placeholder="Nombre y apellido"
-                  className="form-control"
+                  className="form-control form-control-sm"
                   value={form.client_name}
                   onChange={(e) =>
                     setForm({ ...form, client_name: e.target.value })
@@ -247,13 +285,13 @@ export default function AdminPadel() {
 
               <div className="mb-2">
                 <label className="form-label small fw-bold">
-                  Teléfono (WhatsApp)
+                  Teléfono (WhatsApp) *
                 </label>
                 <input
                   type="text"
                   required
                   placeholder="Ej: 3435123456"
-                  className="form-control"
+                  className="form-control form-control-sm"
                   value={form.client_phone}
                   onChange={(e) =>
                     setForm({ ...form, client_phone: e.target.value })
@@ -261,12 +299,12 @@ export default function AdminPadel() {
                 />
               </div>
 
-              <div className="row mb-2">
+              <div className="row g-2 mb-2">
                 <div className="col-6">
                   <label className="form-label small fw-bold">Precio ($)</label>
                   <input
                     type="number"
-                    className="form-control"
+                    className="form-control form-control-sm"
                     value={form.final_price}
                     onChange={(e) =>
                       setForm({ ...form, final_price: e.target.value })
@@ -278,7 +316,7 @@ export default function AdminPadel() {
                     Estado Pago
                   </label>
                   <select
-                    className="form-select"
+                    className="form-select form-select-sm"
                     value={form.payment_method}
                     onChange={(e) =>
                       setForm({ ...form, payment_method: e.target.value })
@@ -286,6 +324,7 @@ export default function AdminPadel() {
                   >
                     <option value="pendiente">Pendiente</option>
                     <option value="efectivo">Efectivo</option>
+                    <option value="transferencia">Transferencia</option>
                     <option value="mercadopago">Mercado Pago</option>
                   </select>
                 </div>
@@ -298,13 +337,16 @@ export default function AdminPadel() {
                 <input
                   type="text"
                   placeholder="Seña, paletas alquiladas, etc."
-                  className="form-control"
+                  className="form-control form-control-sm"
                   value={form.notes}
                   onChange={(e) => setForm({ ...form, notes: e.target.value })}
                 />
               </div>
 
-              <button type="submit" className="btn btn-dark w-100 py-2">
+              <button
+                type="submit"
+                className="btn btn-dark w-100 py-2 fw-bold btn-sm"
+              >
                 Agendar Turno
               </button>
             </form>
@@ -312,7 +354,7 @@ export default function AdminPadel() {
         </div>
 
         <div className="col-lg-8">
-          <div className="card shadow-sm border-0 p-3">
+          <div className="card shadow-sm border-0 p-3 bg-white">
             <h5 className="fw-bold mb-3">Grilla de Turnos ({selectedDate})</h5>
 
             {loading ? (
@@ -329,8 +371,8 @@ export default function AdminPadel() {
               </div>
             ) : (
               <div className="table-responsive">
-                <table className="table align-middle">
-                  <thead className="table-light">
+                <table className="table table-hover align-middle mb-0">
+                  <thead className="table-light small text-uppercase">
                     <tr>
                       <th>Horario</th>
                       <th>Cancha</th>
@@ -343,13 +385,21 @@ export default function AdminPadel() {
                   <tbody>
                     {reservations.map((r) => (
                       <tr key={r.idreservations}>
-                        <td className="fw-bold">{`${r.start_time} - ${r.end_time}`}</td>
-                        <td>{r.court_name}</td>
+                        <td className="fw-bold text-dark">
+                          {formatTimeRange(r.start_time, r.end_time)}
+                        </td>
                         <td>
-                          <div className="fw-semibold">{r.client_name}</div>
+                          <span className="badge bg-light text-dark border">
+                            {r.court_name || "Pista"}
+                          </span>
+                        </td>
+                        <td>
+                          <div className="fw-bold text-dark">
+                            {r.client_name}
+                          </div>
                           <small className="text-muted">{r.client_phone}</small>
                           {r.notes && (
-                            <div className="text-muted small italic">
+                            <div className="text-muted small fst-italic">
                               Nota: {r.notes}
                             </div>
                           )}
@@ -362,7 +412,8 @@ export default function AdminPadel() {
                                 : "bg-info text-dark"
                             }`}
                           >
-                            {r.payment_method} (${r.final_price})
+                            {r.payment_method} ($
+                            {Number(r.final_price).toLocaleString("es-AR")})
                           </span>
                         </td>
                         <td>
@@ -372,7 +423,7 @@ export default function AdminPadel() {
                                 ? "bg-success"
                                 : r.status === "cancelada"
                                   ? "bg-danger"
-                                  : "bg-primary"
+                                  : "bg-secondary"
                             }`}
                           >
                             {r.status}
@@ -380,9 +431,9 @@ export default function AdminPadel() {
                         </td>
                         <td className="text-end">
                           {r.status === "confirmada" && (
-                            <>
+                            <div className="btn-group btn-group-sm">
                               <button
-                                className="btn btn-sm btn-outline-success me-1"
+                                className="btn btn-outline-success btn-sm"
                                 onClick={() =>
                                   handleStatusChange(
                                     r.idreservations,
@@ -394,7 +445,7 @@ export default function AdminPadel() {
                                 Completar
                               </button>
                               <button
-                                className="btn btn-sm btn-outline-danger"
+                                className="btn btn-outline-danger btn-sm"
                                 onClick={() =>
                                   handleStatusChange(
                                     r.idreservations,
@@ -405,7 +456,7 @@ export default function AdminPadel() {
                               >
                                 Cancelar
                               </button>
-                            </>
+                            </div>
                           )}
                         </td>
                       </tr>
