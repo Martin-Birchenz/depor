@@ -329,7 +329,7 @@ export default function AdminSocios() {
           >
             {sendingReminders
               ? "Enviando recordatorios..."
-              : "📧 Notificar Deudores"}
+              : "Notificar Deudores"}
           </button>
 
           <button
@@ -338,7 +338,7 @@ export default function AdminSocios() {
             onClick={() => setShowCampaignModal(true)}
             disabled={sendingReminders || sendingBroadcast}
           >
-            📢 Difundir Proyecto / Obra
+            Difundir Proyecto / Obra
           </button>
 
           <button
