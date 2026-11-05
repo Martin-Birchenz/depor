@@ -1,6 +1,7 @@
 import { useState } from "react";
+import api from "../../service/api";
 
-const VALOR_CUOTA = 5000; // O configurable según backend
+const VALOR_CUOTA = 5000;
 
 export default function ModalPagarCuota({ show, onClose }) {
   const [identifier, setIdentifier] = useState("");
@@ -18,14 +19,16 @@ export default function ModalPagarCuota({ show, onClose }) {
     setMember(null);
 
     try {
-      const res = await fetch(
-        `${import.meta.env.VITE_API_URL || "/api"}/payments/check-debt?identifier=${encodeURIComponent(identifier.trim())}`,
+      const { data } = await api.get(
+        `/payments/check-debt?identifier=${encodeURIComponent(identifier.trim())}`,
       );
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "Socio no encontrado");
       setMember(data);
     } catch (err) {
-      setError(err.message);
+      setError(
+        err.response?.data?.message ||
+          err.message ||
+          "Error al consultar socio",
+      );
     } finally {
       setLoading(false);
     }
@@ -36,27 +39,30 @@ export default function ModalPagarCuota({ show, onClose }) {
     setError(null);
 
     try {
-      const res = await fetch(
-        `${import.meta.env.VITE_API_URL || "/api"}/payments/create-preference`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            memberId: member.idmembers || member.id,
-            months: Number(months),
-          }),
-        },
-      );
-      const data = await res.json();
+      const { data } = await api.post("/payments/create-preference", {
+        memberId: member.id || member.idmembers,
+        months: Number(months),
+      });
+
       if (data.initPoint) {
         window.location.href = data.initPoint;
       } else {
         throw new Error("No se pudo generar el enlace de pago.");
       }
     } catch (err) {
-      setError(err.message);
+      setError(
+        err.response?.data?.message ||
+          err.message ||
+          "Error al procesar el pago",
+      );
       setLoading(false);
     }
+  };
+
+  const formatDate = (dateStr) => {
+    if (!dateStr) return null;
+    const d = new Date(dateStr);
+    return isNaN(d.getTime()) ? null : d.toLocaleDateString("es-AR");
   };
 
   return (
@@ -108,24 +114,37 @@ export default function ModalPagarCuota({ show, onClose }) {
               <div>
                 <div className="bg-light p-3 rounded mb-3 border">
                   <h6 className="fw-bold mb-1">
-                    {member.first_name} {member.last_name}
+                    {member.firstName} {member.lastName}
                   </h6>
                   <p className="small text-muted mb-1">
-                    DNI: {member.dni} | N° Socio: #{member.member_number}
+                    DNI: <strong>{member.dni}</strong> | N° Socio:{" "}
+                    <strong>
+                      #{String(member.memberNumber || "").padStart(4, "0")}
+                    </strong>
                   </p>
                   <p className="small mb-0">
-                    Estado actual:{" "}
+                    Estado:{" "}
                     <span
-                      className={`badge ${member.status === "active" ? "bg-success" : "bg-danger"}`}
+                      className={`badge ${member.isUpToDate ? "bg-success" : "bg-danger"}`}
                     >
-                      {member.status === "active" ? "Al Día" : "Deudor"}
+                      {member.statusLabel}
                     </span>
+                    {member.paidUntil && (
+                      <span
+                        className="ms-2 text-muted"
+                        style={{ fontSize: "12px" }}
+                      >
+                        (Cuota cubierta hasta: {formatDate(member.paidUntil)})
+                      </span>
+                    )}
                   </p>
                 </div>
 
                 <div className="mb-3">
                   <label className="form-label small fw-bold">
-                    ¿Cuántos meses deseás abonar?
+                    {member.isUpToDate
+                      ? "¿Deseás adelantar cuotas?"
+                      : "¿Cuántas cuotas vas a abonar?"}
                   </label>
                   <select
                     className="form-select form-select-sm"
@@ -133,8 +152,7 @@ export default function ModalPagarCuota({ show, onClose }) {
                     onChange={(e) => setMonths(Number(e.target.value))}
                   >
                     <option value={1}>
-                      1 Mes (Regular) - $
-                      {(VALOR_CUOTA * 1).toLocaleString("es-AR")}
+                      1 Mes - ${(VALOR_CUOTA * 1).toLocaleString("es-AR")}
                     </option>
                     <option value={3}>
                       3 Meses (Trimestre) - $
@@ -156,7 +174,7 @@ export default function ModalPagarCuota({ show, onClose }) {
                 </div>
 
                 <div className="d-flex justify-content-between align-items-center border-top pt-3 mb-3">
-                  <span className="fw-bold">Total a pagar:</span>
+                  <span className="fw-bold">Total a abonar:</span>
                   <span className="fs-5 fw-bold text-primary">
                     ${(VALOR_CUOTA * months).toLocaleString("es-AR")}
                   </span>
@@ -171,6 +189,16 @@ export default function ModalPagarCuota({ show, onClose }) {
                 >
                   {loading ? "Generando link..." : "Pagar con Mercado Pago"}
                 </button>
+
+                <div className="text-center mt-3">
+                  <button
+                    type="button"
+                    className="btn btn-link btn-sm text-muted text-decoration-none"
+                    onClick={() => setMember(null)}
+                  >
+                    ← Buscar otro socio
+                  </button>
+                </div>
               </div>
             )}
           </div>

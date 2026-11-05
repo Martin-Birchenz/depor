@@ -155,30 +155,40 @@ export default function AdminSocios() {
     }
   };
 
+  // 1. Estados independientes de procesamiento
+  const [sendingReminders, setSendingReminders] = useState(false);
+  const [sendingBroadcast, setSendingBroadcast] = useState(false);
+
+  // 2. Disparo de recordatorios a deudores (Exclusivo)
+
   const handleSendDebtorReminders = async () => {
-    if (
-      !window.confirm(
-        "¿Deseas enviar un correo recordatorio con link de pago a todos los socios deudores?",
-      )
-    )
-      return;
-    setSendingEmails(true);
+    const confirmed = window.confirm(
+      "¿Confirmas el envío de correos electrónicos con botón de pago a todos los socios deudores?",
+    );
+    if (!confirmed) return;
+
+    setSendingReminders(true);
     try {
       const res = await sendDebtorReminders();
-      addToast(res.message, "success");
+      addToast(res.message || "Recordatorios enviados exitosamente", "success");
     } catch (err) {
-      addToast(err.message, "error");
+      const errorMsg =
+        err.response?.data?.message ||
+        err.message ||
+        "Error al enviar recordatorios";
+      addToast(errorMsg, "error");
     } finally {
-      setSendingEmails(false);
+      setSendingReminders(false);
     }
   };
 
+  // 3. Difusión masiva de obras y proyectos (Exclusivo)
   const handleBroadcastSubmit = async (e) => {
     e.preventDefault();
-    setSendingEmails(true);
+    setSendingBroadcast(true);
     try {
       const res = await broadcastCampaign(campaignData);
-      addToast(res.message, "success");
+      addToast(res.message || "Campaña difundida a los socios", "success");
       setShowCampaignModal(false);
       setCampaignData({
         title: "",
@@ -187,9 +197,13 @@ export default function AdminSocios() {
         linkAction: "",
       });
     } catch (err) {
-      addToast(err.message, "error");
+      const errorMsg =
+        err.response?.data?.message ||
+        err.message ||
+        "Error al difundir el comunicado";
+      addToast(errorMsg, "error");
     } finally {
-      setSendingEmails(false);
+      setSendingBroadcast(false);
     }
   };
 
@@ -311,17 +325,20 @@ export default function AdminSocios() {
             type="button"
             className="btn btn-outline-danger btn-sm fw-bold px-3 py-2"
             onClick={handleSendDebtorReminders}
-            disabled={sendingEmails}
+            disabled={sendingReminders || sendingBroadcast}
           >
-            {sendingEmails ? "Enviando..." : "Notificar Deudores"}
+            {sendingReminders
+              ? "Enviando recordatorios..."
+              : "📧 Notificar Deudores"}
           </button>
 
           <button
             type="button"
             className="btn btn-outline-dark btn-sm fw-bold px-3 py-2"
             onClick={() => setShowCampaignModal(true)}
+            disabled={sendingReminders || sendingBroadcast}
           >
-            Difundir Proyecto / Obra
+            📢 Difundir Proyecto / Obra
           </button>
 
           <button

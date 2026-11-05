@@ -8,46 +8,59 @@ class PaymentController {
   // 1. Consultar estado societario para pago
   async checkMemberDebt(req, res, next) {
     try {
-      const { identifier } = req.query; // Puede ser DNI o N° de socio
+      const { identifier } = req.query;
+
       if (!identifier) {
         return res
           .status(400)
-          .json({ message: "Se requiere DNI o N° de Socio" });
+          .json({ message: "Debe ingresar un DNI o N° de socio." });
       }
 
-      let member = await memberRepository.findByDni(identifier);
-      if (!member && !isNaN(identifier)) {
-        member = await memberRepository.findByMemberNumber(Number(identifier));
+      const trimmed = String(identifier).trim();
+
+      // 1. Buscar por DNI
+      let member = await memberRepository.findByDni(trimmed);
+
+      // 2. Si no encuentra y es numérico, buscar por N° de Socio
+      if (!member && !isNaN(trimmed)) {
+        member = await memberRepository.findByMemberNumber(Number(trimmed));
       }
 
       if (!member) {
         return res
           .status(404)
-          .json({ message: "No se encontró ningún socio con esos datos" });
+          .json({
+            message: "No se encontró ningún socio con ese documento o número.",
+          });
       }
 
+      // 3. Evaluar vencimiento de cuota
+      const today = new Date().toISOString().split("T")[0];
+      let isUpToDate = false;
+
+      // Si es honorario, está exento siempre
       if (member.category === "honorario") {
-        return res.status(200).json({
-          status: "exempt",
-          message:
-            "El socio honorario se encuentra exento de abonar cuota societaria.",
-          member,
-        });
+        isUpToDate = true;
+      } else if (member.paid_until && member.paid_until >= today) {
+        // Tiene cobertura paga hasta una fecha futura o igual a hoy
+        isUpToDate = true;
+      } else if (member.status === "active" && !member.paid_until) {
+        // Si está activo pero aún no se le cargó fecha, lo contemplamos como al día
+        isUpToDate = true;
       }
-
-      const isUpToDate = member.status === "active";
 
       return res.status(200).json({
-        status: isUpToDate ? "up_to_date" : "pending",
-        amount: CUOTA_MENSUAL,
-        member: {
-          id: member.idmembers,
-          name: `${member.first_name} ${member.last_name}`,
-          dni: member.dni,
-          memberNumber: member.member_number,
-          category: member.category,
-          status: member.status,
-        },
+        id: member.idmembers || member.id,
+        idmembers: member.idmembers || member.id,
+        firstName: member.first_name || member.firstName,
+        lastName: member.last_name || member.lastName,
+        dni: member.dni,
+        memberNumber: member.member_number || member.memberNumber,
+        category: member.category,
+        paidUntil: member.paid_until,
+        isUpToDate: isUpToDate,
+        status: isUpToDate ? "active" : "debtor",
+        statusLabel: isUpToDate ? "Al Día" : "Deudor",
       });
     } catch (error) {
       next(error);
