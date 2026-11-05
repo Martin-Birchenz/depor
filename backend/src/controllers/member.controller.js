@@ -1,4 +1,5 @@
 const memberService = require("../services/member.service.js");
+const memberRepository = require("../repositories/member.repository.js");
 const { sendSuccess } = require("../middlewares/responseHandler.js");
 
 class MemberController {
