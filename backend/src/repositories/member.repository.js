@@ -128,16 +128,20 @@ class MemberRepository {
     const member = await this.findById(id);
     if (!member) throw new Error("Socio no encontrado");
 
-    // Si tiene paid_until vigente en el futuro, partimos de ahí; si no, desde hoy
     const now = new Date();
     let baseDate =
       member.paid_until && new Date(member.paid_until) > now
         ? new Date(member.paid_until)
         : now;
 
-    // Sumar los meses correspondientes
+    // Sumar meses
     baseDate.setMonth(baseDate.getMonth() + Number(months));
-    const newPaidUntil = baseDate.toISOString().split("T")[0];
+
+    // Formato YYYY-MM-DD estricto para MySQL DATE
+    const year = baseDate.getFullYear();
+    const month = String(baseDate.getMonth() + 1).padStart(2, "0");
+    const day = String(baseDate.getDate()).padStart(2, "0");
+    const newPaidUntil = `${year}-${month}-${day}`;
 
     const planDetail = {
       planName: planName || "Plan Adelantado de Obras",
@@ -148,12 +152,12 @@ class MemberRepository {
     };
 
     const query = `
-      UPDATE members 
-      SET status = 'active', 
-          paid_until = ?, 
-          prepaid_plan = ? 
-      WHERE idmembers = ?
-    `;
+    UPDATE members 
+    SET status = 'active', 
+        paid_until = ?, 
+        prepaid_plan = ? 
+    WHERE idmembers = ?
+  `;
 
     const [result] = await pool.execute(query, [
       newPaidUntil,

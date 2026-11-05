@@ -27,11 +27,9 @@ class PaymentController {
       }
 
       if (!member) {
-        return res
-          .status(404)
-          .json({
-            message: "No se encontró ningún socio con ese documento o número.",
-          });
+        return res.status(404).json({
+          message: "No se encontró ningún socio con ese documento o número.",
+        });
       }
 
       // 3. Evaluar vencimiento de cuota
@@ -55,7 +53,8 @@ class PaymentController {
         firstName: member.first_name || member.firstName,
         lastName: member.last_name || member.lastName,
         dni: member.dni,
-        memberNumber: member.member_number || member.memberNumber,
+        memberNumber:
+          member.member_number || member.idmembers || member.id || 1,
         category: member.category,
         paidUntil: member.paid_until,
         isUpToDate: isUpToDate,
