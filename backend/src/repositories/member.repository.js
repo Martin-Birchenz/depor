@@ -228,6 +228,119 @@ class MemberRepository {
     const [result] = await pool.execute(query, [newPaidUntil, id]);
     return result.affectedRows > 0;
   }
+
+  async create(data) {
+    const memberNum = data.memberNumber ?? (await this.getNextMemberNumber());
+    const paidUntil = data.paidUntil || null;
+
+    const query = `
+      INSERT INTO members (
+        dni, cuit, first_name, last_name, phone, email, photo_url, 
+        status, paid_until, prepaid_plan, category, tutor_info, family_members, member_number, created_at
+      )
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `;
+
+    // Normalizar fecha de ingreso en formato YYYY-MM-DD HH:MM:SS para evitar default o desfase UTC
+    let createdAtFormatted;
+    if (data.createdAt) {
+      const datePart = data.createdAt.split("T")[0];
+      createdAtFormatted = `${datePart} 12:00:00`;
+    } else {
+      const now = new Date();
+      createdAtFormatted = now.toISOString().slice(0, 19).replace("T", " ");
+    }
+
+    const params = [
+      data.dni ?? null,
+      data.cuit ?? null,
+      data.firstName ?? data.first_name ?? null,
+      data.lastName ?? data.last_name ?? null,
+      data.phone ?? null,
+      data.email ?? null,
+      data.photoUrl ?? data.photo_url ?? null,
+      data.status ?? "active",
+      paidUntil,
+      data.prepaidPlan ? JSON.stringify(data.prepaidPlan) : null,
+      data.category ?? "general",
+      data.tutorInfo ? JSON.stringify(data.tutorInfo) : null,
+      data.familyMembers ? JSON.stringify(data.familyMembers) : null,
+      memberNum,
+      createdAtFormatted,
+    ];
+
+    const [result] = await pool.execute(query, params);
+    return { insertId: result.insertId, memberNumber: memberNum };
+  }
+
+  // MÉTODO PARA EDITAR DATOS DEL SOCIO
+  async update(id, data) {
+    const fields = [];
+    const params = [];
+
+    if (data.dni !== undefined) {
+      fields.push("dni = ?");
+      params.push(data.dni);
+    }
+    if (data.cuit !== undefined) {
+      fields.push("cuit = ?");
+      params.push(data.cuit || null);
+    }
+    if (data.firstName !== undefined || data.first_name !== undefined) {
+      fields.push("first_name = ?");
+      params.push(data.firstName || data.first_name);
+    }
+    if (data.lastName !== undefined || data.last_name !== undefined) {
+      fields.push("last_name = ?");
+      params.push(data.lastName || data.last_name);
+    }
+    if (data.phone !== undefined) {
+      fields.push("phone = ?");
+      params.push(data.phone);
+    }
+    if (data.email !== undefined) {
+      fields.push("email = ?");
+      params.push(data.email || null);
+    }
+    if (data.photoUrl !== undefined || data.photo_url !== undefined) {
+      fields.push("photo_url = ?");
+      params.push(data.photoUrl || data.photo_url || null);
+    }
+    if (data.category !== undefined) {
+      fields.push("category = ?");
+      params.push(data.category);
+    }
+    if (data.memberNumber !== undefined) {
+      fields.push("member_number = ?");
+      params.push(Number(data.memberNumber));
+    }
+    if (data.createdAt !== undefined || data.created_at !== undefined) {
+      const cDate = (data.createdAt || data.created_at).split("T")[0];
+      fields.push("created_at = ?");
+      params.push(`${cDate} 12:00:00`);
+    }
+    if (data.paidUntil !== undefined || data.paid_until !== undefined) {
+      fields.push("paid_until = ?");
+      params.push(data.paidUntil || data.paid_until || null);
+    }
+    if (data.tutorInfo !== undefined) {
+      fields.push("tutor_info = ?");
+      params.push(data.tutorInfo ? JSON.stringify(data.tutorInfo) : null);
+    }
+    if (data.familyMembers !== undefined) {
+      fields.push("family_members = ?");
+      params.push(
+        data.familyMembers ? JSON.stringify(data.familyMembers) : null,
+      );
+    }
+
+    if (fields.length === 0) return true;
+
+    params.push(id);
+    const query = `UPDATE members SET ${fields.join(", ")} WHERE idmembers = ?`;
+    const [result] = await pool.execute(query, params);
+    return result.affectedRows > 0;
+  }
 }
 
 module.exports = new MemberRepository();

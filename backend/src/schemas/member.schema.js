@@ -36,6 +36,8 @@ const createMemberSchema = z.object({
     .enum(["general", "cadete", "familiar", "vitalicio", "honorario"])
     .default("general"),
   memberNumber: z.number().int().positive().optional().nullable(),
+  createdAt: z.string().optional().nullable(),
+  paidUntil: z.string().optional().nullable(),
   tutorInfo: z.any().optional().nullable(),
   familyMembers: z.any().optional().nullable(),
 });

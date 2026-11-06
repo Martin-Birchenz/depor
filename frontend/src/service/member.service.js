@@ -48,3 +48,8 @@ export const broadcastCampaign = async (campaignData) => {
   );
   return data;
 };
+
+export const updateMember = async (id, memberData) => {
+  const response = await api.put(`/members/${id}`, memberData);
+  return response.data;
+};

@@ -33,4 +33,7 @@ router.patch(
 
 router.post("/:id/prepaid-plan", memberController.applyPrepaidPlan);
 
+router.put("/:id", memberController.update);
+// o router.patch("/:id", memberController.update);
+
 module.exports = router;

@@ -2,16 +2,15 @@ import { useEffect, useState, useCallback } from "react";
 import {
   getMembers,
   registerMember,
+  updateMember,
   updateMemberStatus,
   uploadMemberPhoto,
   applyPrepaidPlan,
-} from "../../service/member.service";
-import { useToast } from "../../hooks/useToast";
-import LoadingSpinner from "../../components/common/LoadingSpinner";
-import {
   sendDebtorReminders,
   broadcastCampaign,
 } from "../../service/member.service";
+import { useToast } from "../../hooks/useToast";
+import LoadingSpinner from "../../components/common/LoadingSpinner";
 
 export default function AdminSocios() {
   const { addToast } = useToast();
@@ -21,8 +20,10 @@ export default function AdminSocios() {
   const [statusFilter, setStatusFilter] = useState("todos");
   const [categoryFilter, setCategoryFilter] = useState("todas");
 
-  // Modales
+  // Modal Alta / Edición
   const [showModal, setShowModal] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editingId, setEditingId] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [photoFile, setPhotoFile] = useState(null);
   const [photoPreview, setPhotoPreview] = useState(null);
@@ -32,13 +33,14 @@ export default function AdminSocios() {
   const [selectedMember, setSelectedMember] = useState(null);
   const [planForm, setPlanForm] = useState({
     months: 12,
-    planName: "Iluminación - Cancha 3 - Tenis",
+    planName: "Iluminación Cancha 3 Tenis",
     amountPaid: "",
+    isSpecialException: false,
+    exceptionReason: "",
   });
   const [savingPlan, setSavingPlan] = useState(false);
 
-  // Estado del nuevo socio
-  const [newMember, setNewMember] = useState({
+  const defaultMemberState = {
     firstName: "",
     lastName: "",
     dni: "",
@@ -56,7 +58,9 @@ export default function AdminSocios() {
       relationship: "Padre/Madre",
     },
     familyMembers: [],
-  });
+  };
+
+  const [newMember, setNewMember] = useState(defaultMemberState);
 
   const categoryLabels = {
     general: "Socio General",
@@ -66,7 +70,8 @@ export default function AdminSocios() {
     honorario: "Socio Honorario",
   };
 
-  const [sendingEmails, setSendingEmails] = useState(false);
+  const [sendingReminders, setSendingReminders] = useState(false);
+  const [sendingBroadcast, setSendingBroadcast] = useState(false);
   const [showCampaignModal, setShowCampaignModal] = useState(false);
   const [campaignData, setCampaignData] = useState({
     title: "",
@@ -155,12 +160,6 @@ export default function AdminSocios() {
     }
   };
 
-  // 1. Estados independientes de procesamiento
-  const [sendingReminders, setSendingReminders] = useState(false);
-  const [sendingBroadcast, setSendingBroadcast] = useState(false);
-
-  // 2. Disparo de recordatorios a deudores (Exclusivo)
-
   const handleSendDebtorReminders = async () => {
     const confirmed = window.confirm(
       "¿Confirmas el envío de correos electrónicos con botón de pago a todos los socios deudores?",
@@ -172,17 +171,17 @@ export default function AdminSocios() {
       const res = await sendDebtorReminders();
       addToast(res.message || "Recordatorios enviados exitosamente", "success");
     } catch (err) {
-      const errorMsg =
+      addToast(
         err.response?.data?.message ||
-        err.message ||
-        "Error al enviar recordatorios";
-      addToast(errorMsg, "error");
+          err.message ||
+          "Error al enviar recordatorios",
+        "error",
+      );
     } finally {
       setSendingReminders(false);
     }
   };
 
-  // 3. Difusión masiva de obras y proyectos (Exclusivo)
   const handleBroadcastSubmit = async (e) => {
     e.preventDefault();
     setSendingBroadcast(true);
@@ -197,19 +196,17 @@ export default function AdminSocios() {
         linkAction: "",
       });
     } catch (err) {
-      const errorMsg =
-        err.response?.data?.message ||
-        err.message ||
-        "Error al difundir el comunicado";
-      addToast(errorMsg, "error");
+      addToast(
+        err.response?.data?.message || err.message || "Error al difundir",
+        "error",
+      );
     } finally {
       setSendingBroadcast(false);
     }
   };
 
-  const CUOTA_VALOR_ADMIN = 5000; // Valor cuota del club
+  const CUOTA_VALOR_ADMIN = 5000;
 
-  // En openPlanModal:
   const openPlanModal = (member) => {
     setSelectedMember(member);
     const initialMonths = 12;
@@ -223,7 +220,6 @@ export default function AdminSocios() {
     setShowPlanModal(true);
   };
 
-  // Al cambiar los meses, autocalcular el monto sugerido:
   const handleMonthsChange = (newMonths) => {
     const m = Number(newMonths);
     setPlanForm((prev) => ({
@@ -254,27 +250,73 @@ export default function AdminSocios() {
   };
 
   const resetForm = () => {
-    setNewMember({
-      firstName: "",
-      lastName: "",
-      dni: "",
-      cuit: "",
-      email: "",
-      phone: "",
-      category: "general",
-      memberNumber: "",
-      photoUrl: "",
-      createdAt: new Date().toISOString().split("T")[0],
-      tutorInfo: {
-        fullName: "",
-        dni: "",
-        phone: "",
-        relationship: "Padre/Madre",
-      },
-      familyMembers: [],
-    });
+    setNewMember(defaultMemberState);
     setPhotoFile(null);
     setPhotoPreview(null);
+    setIsEditing(false);
+    setEditingId(null);
+  };
+
+  // Abrir modal en modo edición
+  const openEditModal = (member) => {
+    setIsEditing(true);
+    setEditingId(member.idmembers || member.id);
+
+    let parsedTutor = {
+      fullName: "",
+      dni: "",
+      phone: "",
+      relationship: "Padre/Madre",
+    };
+    if (member.tutor_info) {
+      try {
+        parsedTutor =
+          typeof member.tutor_info === "string"
+            ? JSON.parse(member.tutor_info)
+            : member.tutor_info;
+      } catch (e) {
+        parsedTutor = {
+          fullName: "",
+          dni: "",
+          phone: "",
+          relationship: "Padre/Madre",
+        };
+      }
+    }
+
+    let parsedFamily = [];
+    if (member.family_members) {
+      try {
+        parsedFamily =
+          typeof member.family_members === "string"
+            ? JSON.parse(member.family_members)
+            : member.family_members;
+      } catch (e) {
+        parsedFamily = [];
+      }
+    }
+
+    const regDate = member.created_at
+      ? member.created_at.split("T")[0]
+      : new Date().toISOString().split("T")[0];
+
+    setNewMember({
+      firstName: member.first_name || member.firstName || "",
+      lastName: member.last_name || member.lastName || "",
+      dni: member.dni || "",
+      cuit: member.cuit || "",
+      email: member.email || "",
+      phone: member.phone || "",
+      category: member.category || "general",
+      memberNumber: member.member_number || "",
+      photoUrl: member.photo_url || member.photoUrl || "",
+      createdAt: regDate,
+      tutorInfo: parsedTutor,
+      familyMembers: parsedFamily || [],
+    });
+
+    setPhotoPreview(member.photo_url || member.photoUrl || null);
+    setShowModal(true);
   };
 
   const handleModalSubmit = async (e) => {
@@ -295,13 +337,22 @@ export default function AdminSocios() {
           : null,
       };
 
-      await registerMember(payload);
+      if (isEditing && editingId) {
+        await updateMember(editingId, payload);
+        addToast("Datos del socio actualizados con éxito", "success");
+      } else {
+        await registerMember(payload);
+        addToast("Socio registrado con éxito", "success");
+      }
+
       setShowModal(false);
       resetForm();
       fetchSocios();
-      addToast("Socio registrado con éxito", "success");
     } catch (error) {
-      addToast("Error al guardar el socio.", "error");
+      addToast(
+        error.response?.data?.message || "Error al procesar el socio.",
+        "error",
+      );
       console.error(error);
     } finally {
       setSubmitting(false);
@@ -310,8 +361,9 @@ export default function AdminSocios() {
 
   const formatDate = (dateStr) => {
     if (!dateStr) return "-";
-    const d = new Date(dateStr);
-    return isNaN(d.getTime()) ? "-" : d.toLocaleDateString("es-AR");
+    const parts = dateStr.split("T")[0].split("-");
+    if (parts.length === 3) return `${parts[2]}/${parts[1]}/${parts[0]}`;
+    return dateStr;
   };
 
   return (
@@ -344,7 +396,10 @@ export default function AdminSocios() {
           <button
             type="button"
             className="btn btn-dark btn-sm fw-bold px-3 py-2"
-            onClick={() => setShowModal(true)}
+            onClick={() => {
+              resetForm();
+              setShowModal(true);
+            }}
           >
             + Nuevo Socio
           </button>
@@ -526,6 +581,14 @@ export default function AdminSocios() {
                         <div className="d-flex align-items-center justify-content-end gap-2">
                           <button
                             type="button"
+                            className="btn btn-outline-secondary btn-sm py-0 px-2"
+                            title="Editar información del socio"
+                            onClick={() => openEditModal(member)}
+                          >
+                            Editar
+                          </button>
+                          <button
+                            type="button"
                             className="btn btn-outline-primary btn-sm py-0 px-2"
                             title="Cargar pago voluntario anticipado / aporte de obras"
                             onClick={() => openPlanModal(member)}
@@ -555,175 +618,7 @@ export default function AdminSocios() {
         </div>
       </div>
 
-      {/* Modal Plan Obra con Congruencia */}
-      {showPlanModal && selectedMember && (
-        <div
-          className="modal fade show d-block"
-          tabIndex="-1"
-          style={{ backgroundColor: "rgba(0,0,0,0.65)", zIndex: 1060 }}
-        >
-          <div className="modal-dialog modal-dialog-centered">
-            <div className="modal-content border-0 shadow">
-              <div className="modal-header bg-dark text-white">
-                <h5 className="modal-title fw-bold">
-                  Plan Anticipado / Aporte Obras
-                </h5>
-                <button
-                  type="button"
-                  className="btn-close btn-close-white"
-                  onClick={() => setShowPlanModal(false)}
-                ></button>
-              </div>
-
-              <form onSubmit={handlePlanSubmit}>
-                <div className="modal-body p-4">
-                  <p className="small mb-3">
-                    Socio:{" "}
-                    <strong>
-                      {selectedMember.first_name} {selectedMember.last_name}
-                    </strong>{" "}
-                    (DNI: {selectedMember.dni})
-                  </p>
-
-                  <div className="mb-3">
-                    <label className="form-label small fw-bold">
-                      Motivo / Obra *
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      className="form-control form-control-sm"
-                      value={planForm.planName}
-                      onChange={(e) =>
-                        setPlanForm({ ...planForm, planName: e.target.value })
-                      }
-                    />
-                  </div>
-
-                  <div className="row g-2 mb-3">
-                    <div className="col-6">
-                      <label className="form-label small fw-bold">
-                        Cuotas adelantadas *
-                      </label>
-                      <select
-                        className="form-select form-select-sm"
-                        value={planForm.months}
-                        onChange={(e) => handleMonthsChange(e.target.value)}
-                      >
-                        <option value={3}>3 meses</option>
-                        <option value={6}>6 meses (Semestre)</option>
-                        <option value={12}>12 meses (1 Año)</option>
-                        <option value={24}>24 meses (2 Años)</option>
-                        <option value={36}>36 meses (3 Años)</option>
-                        <option value={48}>48 meses (4 Años)</option>
-                      </select>
-                    </div>
-
-                    <div className="col-6">
-                      <label className="form-label small fw-bold">
-                        Monto aportado ($) *
-                      </label>
-                      <input
-                        type="number"
-                        required
-                        min={
-                          planForm.isSpecialException
-                            ? 1
-                            : planForm.months * CUOTA_VALOR_ADMIN
-                        }
-                        className="form-control form-control-sm"
-                        value={planForm.amountPaid}
-                        onChange={(e) =>
-                          setPlanForm({
-                            ...planForm,
-                            amountPaid: e.target.value,
-                          })
-                        }
-                      />
-                      <small
-                        className="text-muted"
-                        style={{ fontSize: "11px" }}
-                      >
-                        Mínimo regular: $
-                        {(planForm.months * CUOTA_VALOR_ADMIN).toLocaleString(
-                          "es-AR",
-                        )}
-                      </small>
-                    </div>
-                  </div>
-
-                  {/* Checkbox de Excepción autorizada */}
-                  <div className="form-check mb-2">
-                    <input
-                      className="form-check-input"
-                      type="checkbox"
-                      id="checkException"
-                      checked={planForm.isSpecialException}
-                      onChange={(e) =>
-                        setPlanForm({
-                          ...planForm,
-                          isSpecialException: e.target.checked,
-                        })
-                      }
-                    />
-                    <label
-                      className="form-check-label small"
-                      htmlFor="checkException"
-                    >
-                      Tarifa especial o bonificación autorizada por Comisión
-                    </label>
-                  </div>
-
-                  {planForm.isSpecialException && (
-                    <div className="mb-3">
-                      <label className="form-label small fw-bold">
-                        Motivo / N° de Acta *
-                      </label>
-                      <input
-                        type="text"
-                        required
-                        placeholder="Ej: Acta 142/2026 - Convenio especial"
-                        className="form-control form-control-sm"
-                        value={planForm.exceptionReason}
-                        onChange={(e) =>
-                          setPlanForm({
-                            ...planForm,
-                            exceptionReason: e.target.value,
-                          })
-                        }
-                      />
-                    </div>
-                  )}
-
-                  <div className="alert alert-info py-2 small mb-0">
-                    Cubre hasta: <strong>{planForm.months} meses</strong>. Fecha
-                    de vencimiento recalculada en automático.
-                  </div>
-                </div>
-
-                <div className="modal-footer bg-light">
-                  <button
-                    type="button"
-                    className="btn btn-sm btn-outline-secondary"
-                    onClick={() => setShowPlanModal(false)}
-                  >
-                    Cancelar
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={savingPlan}
-                    className="btn btn-sm btn-primary fw-bold px-3"
-                  >
-                    {savingPlan ? "Guardando..." : "Confirmar Plan"}
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Modal Nuevo Socio con Fecha de Ingreso */}
+      {/* Modal Nuevo / Editar Socio */}
       {showModal && (
         <div
           className="modal fade show d-block"
@@ -733,7 +628,11 @@ export default function AdminSocios() {
           <div className="modal-dialog modal-dialog-centered modal-lg">
             <div className="modal-content border-0 shadow">
               <div className="modal-header bg-black text-white">
-                <h5 className="modal-title fw-bold">Registrar nuevo socio</h5>
+                <h5 className="modal-title fw-bold">
+                  {isEditing
+                    ? "Editar datos del socio"
+                    : "Registrar nuevo socio"}
+                </h5>
                 <button
                   type="button"
                   className="btn-close btn-close-white"
@@ -1117,7 +1016,11 @@ export default function AdminSocios() {
                     disabled={submitting}
                     className="btn btn-sm btn-dark px-3 fw-bold"
                   >
-                    {submitting ? "Guardando..." : "Registrar Socio"}
+                    {submitting
+                      ? "Guardando..."
+                      : isEditing
+                        ? "Actualizar Socio"
+                        : "Registrar Socio"}
                   </button>
                 </div>
               </form>
@@ -1125,7 +1028,175 @@ export default function AdminSocios() {
           </div>
         </div>
       )}
-      {/* Modal Difundir Proyecto / Obra */}
+
+      {/* Modal Plan Obra */}
+      {showPlanModal && selectedMember && (
+        <div
+          className="modal fade show d-block"
+          tabIndex="-1"
+          style={{ backgroundColor: "rgba(0,0,0,0.65)", zIndex: 1060 }}
+        >
+          <div className="modal-dialog modal-dialog-centered">
+            <div className="modal-content border-0 shadow">
+              <div className="modal-header bg-dark text-white">
+                <h5 className="modal-title fw-bold">
+                  Plan Anticipado / Aporte Obras
+                </h5>
+                <button
+                  type="button"
+                  className="btn-close btn-close-white"
+                  onClick={() => setShowPlanModal(false)}
+                ></button>
+              </div>
+
+              <form onSubmit={handlePlanSubmit}>
+                <div className="modal-body p-4">
+                  <p className="small mb-3">
+                    Socio:{" "}
+                    <strong>
+                      {selectedMember.first_name} {selectedMember.last_name}
+                    </strong>{" "}
+                    (DNI: {selectedMember.dni})
+                  </p>
+
+                  <div className="mb-3">
+                    <label className="form-label small fw-bold">
+                      Motivo / Obra *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      className="form-control form-control-sm"
+                      value={planForm.planName}
+                      onChange={(e) =>
+                        setPlanForm({ ...planForm, planName: e.target.value })
+                      }
+                    />
+                  </div>
+
+                  <div className="row g-2 mb-3">
+                    <div className="col-6">
+                      <label className="form-label small fw-bold">
+                        Cuotas adelantadas *
+                      </label>
+                      <select
+                        className="form-select form-select-sm"
+                        value={planForm.months}
+                        onChange={(e) => handleMonthsChange(e.target.value)}
+                      >
+                        <option value={3}>3 meses</option>
+                        <option value={6}>6 meses (Semestre)</option>
+                        <option value={12}>12 meses (1 Año)</option>
+                        <option value={24}>24 meses (2 Años)</option>
+                        <option value={36}>36 meses (3 Años)</option>
+                        <option value={48}>48 meses (4 Años)</option>
+                      </select>
+                    </div>
+
+                    <div className="col-6">
+                      <label className="form-label small fw-bold">
+                        Monto aportado ($) *
+                      </label>
+                      <input
+                        type="number"
+                        required
+                        min={
+                          planForm.isSpecialException
+                            ? 1
+                            : planForm.months * CUOTA_VALOR_ADMIN
+                        }
+                        className="form-control form-control-sm"
+                        value={planForm.amountPaid}
+                        onChange={(e) =>
+                          setPlanForm({
+                            ...planForm,
+                            amountPaid: e.target.value,
+                          })
+                        }
+                      />
+                      <small
+                        className="text-muted"
+                        style={{ fontSize: "11px" }}
+                      >
+                        Mínimo regular: $
+                        {(planForm.months * CUOTA_VALOR_ADMIN).toLocaleString(
+                          "es-AR",
+                        )}
+                      </small>
+                    </div>
+                  </div>
+
+                  <div className="form-check mb-2">
+                    <input
+                      className="form-check-input"
+                      type="checkbox"
+                      id="checkException"
+                      checked={planForm.isSpecialException}
+                      onChange={(e) =>
+                        setPlanForm({
+                          ...planForm,
+                          isSpecialException: e.target.checked,
+                        })
+                      }
+                    />
+                    <label
+                      className="form-check-label small"
+                      htmlFor="checkException"
+                    >
+                      Tarifa especial o bonificación autorizada por Comisión
+                    </label>
+                  </div>
+
+                  {planForm.isSpecialException && (
+                    <div className="mb-3">
+                      <label className="form-label small fw-bold">
+                        Motivo / N° de Acta *
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="Ej: Acta 142/2026 - Convenio especial"
+                        className="form-control form-control-sm"
+                        value={planForm.exceptionReason}
+                        onChange={(e) =>
+                          setPlanForm({
+                            ...planForm,
+                            exceptionReason: e.target.value,
+                          })
+                        }
+                      />
+                    </div>
+                  )}
+
+                  <div className="alert alert-info py-2 small mb-0">
+                    Cubre hasta: <strong>{planForm.months} meses</strong>.
+                    Vencimiento recalculado automáticamente.
+                  </div>
+                </div>
+
+                <div className="modal-footer bg-light">
+                  <button
+                    type="button"
+                    className="btn btn-sm btn-outline-secondary"
+                    onClick={() => setShowPlanModal(false)}
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={savingPlan}
+                    className="btn btn-sm btn-primary fw-bold px-3"
+                  >
+                    {savingPlan ? "Guardando..." : "Confirmar Plan"}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Difundir Proyecto */}
       {showCampaignModal && (
         <div
           className="modal fade show d-block"
@@ -1227,10 +1298,10 @@ export default function AdminSocios() {
                   </button>
                   <button
                     type="submit"
-                    disabled={sendingEmails}
+                    disabled={sendingBroadcast}
                     className="btn btn-sm btn-dark fw-bold px-3"
                   >
-                    {sendingEmails
+                    {sendingBroadcast
                       ? "Enviando correos..."
                       : "Enviar Comunicado"}
                   </button>

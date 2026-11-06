@@ -68,6 +68,15 @@ class MemberController {
       next(error);
     }
   }
+  async update(req, res, next) {
+    try {
+      const { id } = req.params;
+      const updated = await memberService.updateMember(id, req.body);
+      return sendSuccess(res, updated, "Socio actualizado exitosamente", 200);
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 
 module.exports = new MemberController();

@@ -53,6 +53,45 @@ class MemberService {
     await memberRepository.updateStatus(id, status);
     return await memberRepository.findById(id);
   }
+  async updateMember(id, data) {
+    const member = await memberRepository.findById(id);
+    if (!member) {
+      const error = new Error("Socio no encontrado");
+      error.statusCode = 404;
+      throw error;
+    }
+
+    // Si cambió el DNI, validar que no choque con otro socio
+    if (data.dni && data.dni !== member.dni) {
+      const existing = await memberRepository.findByDni(data.dni);
+      if (existing && (existing.idmembers || existing.id) !== Number(id)) {
+        const error = new Error("El DNI ya pertenece a otro socio");
+        error.statusCode = 409;
+        throw error;
+      }
+    }
+
+    // Si cambió el N° de socio, validar colisión
+    if (
+      data.memberNumber &&
+      Number(data.memberNumber) !== Number(member.member_number)
+    ) {
+      const existingNum = await memberRepository.findByMemberNumber(
+        Number(data.memberNumber),
+      );
+      if (
+        existingNum &&
+        (existingNum.idmembers || existingNum.id) !== Number(id)
+      ) {
+        const error = new Error("El número de socio ya está asignado");
+        error.statusCode = 409;
+        throw error;
+      }
+    }
+
+    await memberRepository.update(id, data);
+    return await memberRepository.findById(id);
+  }
 }
 
 module.exports = new MemberService();
