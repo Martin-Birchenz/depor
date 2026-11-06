@@ -4,27 +4,28 @@ const memberRepository = require("../repositories/member.repository.js");
 // Valor base de cuota individual
 const CUOTA_MENSUAL = Number(process.env.VALOR_CUOTA_SOCIO) || 5000;
 
-class PaymentController {
-  // Función auxiliar para determinar la cantidad de personas del carnet
-  _calculateMembersCount(member) {
-    if (member.category === "familiar") {
-      let membersList = [];
-      if (typeof member.family_members === "string") {
-        try {
-          membersList = JSON.parse(member.family_members);
-        } catch {
-          membersList = [];
-        }
-      } else if (Array.isArray(member.family_members)) {
-        membersList = member.family_members;
-      }
-      // Titular (1) + integrantes registrados
-      return 1 + membersList.length;
-    }
-    // Para individual, cadete, juvenil, etc. es 1
-    return 1;
-  }
+// Función pura fuera de la clase para evitar problemas de contexto en Express
+function calculateMembersCount(member) {
+  if (!member) return 1;
 
+  if (member.category === "familiar") {
+    let membersList = [];
+    if (typeof member.family_members === "string") {
+      try {
+        membersList = JSON.parse(member.family_members);
+      } catch {
+        membersList = [];
+      }
+    } else if (Array.isArray(member.family_members)) {
+      membersList = member.family_members;
+    }
+    // Titular (1) + integrantes registrados
+    return 1 + (Array.isArray(membersList) ? membersList.length : 0);
+  }
+  return 1;
+}
+
+class PaymentController {
   // 1. Consultar estado societario para pago
   async checkMemberDebt(req, res, next) {
     try {
@@ -61,8 +62,8 @@ class PaymentController {
         isUpToDate = true;
       }
 
-      // Calcular cantidad de miembros y el valor mensual real para este socio
-      const totalMembersInPlan = this._calculateMembersCount(member);
+      // Se usa la función directa sin 'this'
+      const totalMembersInPlan = calculateMembersCount(member);
       const monthlyFee =
         member.category === "honorario"
           ? 0
@@ -100,7 +101,7 @@ class PaymentController {
         return res.status(404).json({ message: "Socio no encontrado" });
       }
 
-      const totalMembersInPlan = this._calculateMembersCount(member);
+      const totalMembersInPlan = calculateMembersCount(member);
       const monthlyRate =
         member.category === "honorario"
           ? 0
