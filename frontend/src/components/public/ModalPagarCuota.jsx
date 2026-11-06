@@ -1,14 +1,15 @@
 import { useState } from "react";
 import api from "../../service/api";
 
-const VALOR_CUOTA = 5000;
-
 export default function ModalPagarCuota({ show, onClose }) {
   const [identifier, setIdentifier] = useState("");
   const [member, setMember] = useState(null);
   const [months, setMonths] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+
+  // Obtener el valor mensual del socio (o 5000 por defecto)
+  const monthlyRate = member?.monthlyFee || 5000;
 
   if (!show) return null;
 
@@ -152,31 +153,38 @@ export default function ModalPagarCuota({ show, onClose }) {
                     onChange={(e) => setMonths(Number(e.target.value))}
                   >
                     <option value={1}>
-                      1 Mes - ${(VALOR_CUOTA * 1).toLocaleString("es-AR")}
+                      1 Mes - ${(monthlyRate * 1).toLocaleString("es-AR")}
                     </option>
                     <option value={3}>
                       3 Meses (Trimestre) - $
-                      {(VALOR_CUOTA * 3).toLocaleString("es-AR")}
+                      {(monthlyRate * 3).toLocaleString("es-AR")}
                     </option>
                     <option value={6}>
                       6 Meses (Semestre) - $
-                      {(VALOR_CUOTA * 6).toLocaleString("es-AR")}
+                      {(monthlyRate * 6).toLocaleString("es-AR")}
                     </option>
                     <option value={12}>
                       12 Meses (1 Año) - $
-                      {(VALOR_CUOTA * 12).toLocaleString("es-AR")}
+                      {(monthlyRate * 12).toLocaleString("es-AR")}
                     </option>
                     <option value={24}>
                       24 Meses (2 Años) - $
-                      {(VALOR_CUOTA * 24).toLocaleString("es-AR")}
+                      {(monthlyRate * 24).toLocaleString("es-AR")}
                     </option>
                   </select>
                 </div>
 
+                {member.category === "familiar" && (
+                  <div className="small text-muted mt-1">
+                    Plan Familiar: incluye titular + {member.totalMembers - 1}{" "}
+                    integrante(s) (${monthlyRate.toLocaleString("es-AR")}/mes).
+                  </div>
+                )}
+
                 <div className="d-flex justify-content-between align-items-center border-top pt-3 mb-3">
                   <span className="fw-bold">Total a abonar:</span>
                   <span className="fs-5 fw-bold text-primary">
-                    ${(VALOR_CUOTA * months).toLocaleString("es-AR")}
+                    ${(monthlyRate * months).toLocaleString("es-AR")}
                   </span>
                 </div>
 

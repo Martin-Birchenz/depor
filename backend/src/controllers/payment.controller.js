@@ -1,10 +1,30 @@
 const { preferenceClient, paymentClient } = require("../config/mercadopago.js");
 const memberRepository = require("../repositories/member.repository.js");
 
-// Valor fijo de cuota mensual
+// Valor base de cuota individual
 const CUOTA_MENSUAL = Number(process.env.VALOR_CUOTA_SOCIO) || 5000;
 
 class PaymentController {
+  // Función auxiliar para determinar la cantidad de personas del carnet
+  _calculateMembersCount(member) {
+    if (member.category === "familiar") {
+      let membersList = [];
+      if (typeof member.family_members === "string") {
+        try {
+          membersList = JSON.parse(member.family_members);
+        } catch {
+          membersList = [];
+        }
+      } else if (Array.isArray(member.family_members)) {
+        membersList = member.family_members;
+      }
+      // Titular (1) + integrantes registrados
+      return 1 + membersList.length;
+    }
+    // Para individual, cadete, juvenil, etc. es 1
+    return 1;
+  }
+
   // 1. Consultar estado societario para pago
   async checkMemberDebt(req, res, next) {
     try {
@@ -18,10 +38,8 @@ class PaymentController {
 
       const trimmed = String(identifier).trim();
 
-      // 1. Buscar por DNI
       let member = await memberRepository.findByDni(trimmed);
 
-      // 2. Si no encuentra y es numérico, buscar por N° de Socio
       if (!member && !isNaN(trimmed)) {
         member = await memberRepository.findByMemberNumber(Number(trimmed));
       }
@@ -32,20 +50,23 @@ class PaymentController {
         });
       }
 
-      // 3. Evaluar vencimiento de cuota
       const today = new Date().toISOString().split("T")[0];
       let isUpToDate = false;
 
-      // Si es honorario, está exento siempre
       if (member.category === "honorario") {
         isUpToDate = true;
       } else if (member.paid_until && member.paid_until >= today) {
-        // Tiene cobertura paga hasta una fecha futura o igual a hoy
         isUpToDate = true;
       } else if (member.status === "active" && !member.paid_until) {
-        // Si está activo pero aún no se le cargó fecha, lo contemplamos como al día
         isUpToDate = true;
       }
+
+      // Calcular cantidad de miembros y el valor mensual real para este socio
+      const totalMembersInPlan = this._calculateMembersCount(member);
+      const monthlyFee =
+        member.category === "honorario"
+          ? 0
+          : CUOTA_MENSUAL * totalMembersInPlan;
 
       return res.status(200).json({
         id: member.idmembers || member.id,
@@ -56,6 +77,8 @@ class PaymentController {
         memberNumber:
           member.member_number || member.idmembers || member.id || 1,
         category: member.category,
+        totalMembers: totalMembersInPlan,
+        monthlyFee: monthlyFee,
         paidUntil: member.paid_until,
         isUpToDate: isUpToDate,
         status: isUpToDate ? "active" : "debtor",
@@ -77,11 +100,17 @@ class PaymentController {
         return res.status(404).json({ message: "Socio no encontrado" });
       }
 
-      const totalAmount = CUOTA_MENSUAL * monthsQty;
+      const totalMembersInPlan = this._calculateMembersCount(member);
+      const monthlyRate =
+        member.category === "honorario"
+          ? 0
+          : CUOTA_MENSUAL * totalMembersInPlan;
+      const totalAmount = monthlyRate * monthsQty;
+
       const title =
-        monthsQty === 1
-          ? "Cuota Social Mensual - El Depor"
-          : `Abono de ${monthsQty} Cuotas Sociales - El Depor`;
+        member.category === "familiar"
+          ? `Cuota Grupo Familiar (${totalMembersInPlan} integrantes - ${monthsQty} mes/es) - El Depor`
+          : `Cuota Social (${monthsQty} mes/es) - El Depor`;
 
       const preference = await preferenceClient.create({
         body: {
@@ -99,7 +128,6 @@ class PaymentController {
             surname: member.last_name || "Depor",
             email: member.email || "socio@eldepor.com.ar",
           },
-          // Guardamos tanto el memberId como la cantidad de meses en la referencia externa
           external_reference: `member_fee:${member.idmembers || member.id}:${monthsQty}`,
           back_urls: {
             success: `${process.env.FRONTEND_URL || "http://localhost:5173"}/socios?status=success`,
@@ -128,7 +156,6 @@ class PaymentController {
       const topic = query.topic || query.type;
       const paymentId = query.id || query["data.id"];
 
-      // Responder 200 de inmediato a Mercado Pago
       res.status(200).send("OK");
 
       if (topic === "payment" && paymentId) {
@@ -142,7 +169,6 @@ class PaymentController {
             const memberId = parts[1];
             const months = parts[2] ? Number(parts[2]) : 1;
 
-            // Extiende X meses
             await memberRepository.extendMonths(memberId, months);
           }
         }
