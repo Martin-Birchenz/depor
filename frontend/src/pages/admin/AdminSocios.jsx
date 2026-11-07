@@ -713,7 +713,7 @@ export default function AdminSocios() {
                             {member.category === "familiar" && (
                               <div className="p-3 bg-white rounded border">
                                 <h6 className="fw-bold mb-2 text-dark">
-                                  👨‍👩‍👧‍👦 Integrantes adheridos al Grupo Familiar de{" "}
+                                  Integrantes adheridos al Grupo Familiar de{" "}
                                   {name}
                                 </h6>
                                 {familyList.length === 0 ? (
@@ -755,7 +755,7 @@ export default function AdminSocios() {
                             {member.category === "cadete" && tutorData && (
                               <div className="p-3 bg-white rounded border">
                                 <h6 className="fw-bold mb-2 text-dark">
-                                  🛡️ Tutor / Responsable Legal de {name}
+                                  Tutor / Responsable Legal de {name}
                                 </h6>
                                 <div className="row g-2 small">
                                   <div className="col-md-3">
