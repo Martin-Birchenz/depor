@@ -7,6 +7,7 @@ const createMemberSchema = z.object({
     .max(20)
     .trim(),
   cuit: z.string().max(20).trim().optional().nullable().or(z.literal("")),
+  birthDate: z.string().optional().nullable(),
   firstName: z
     .string({ required_error: "El nombre es obligatorio" })
     .min(2)
@@ -22,6 +23,7 @@ const createMemberSchema = z.object({
     .min(6)
     .max(50)
     .trim(),
+  address: z.string().max(255).trim().optional().nullable().or(z.literal("")),
   email: z
     .string()
     .email("Email inválido")

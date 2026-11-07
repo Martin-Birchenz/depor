@@ -10,7 +10,7 @@ class MemberRepository {
 
   async findByDni(dni) {
     const query = `
-      SELECT idmembers, dni, cuit, first_name, last_name, phone, email, photo_url, 
+      SELECT idmembers, dni, cuit, birth_date, first_name, last_name, phone, address, email, photo_url, 
              status, paid_until, prepaid_plan, category, tutor_info, family_members, 
              member_number, created_at 
       FROM members 
@@ -23,7 +23,7 @@ class MemberRepository {
 
   async findByMemberNumber(memberNumber) {
     const query = `
-      SELECT idmembers, dni, cuit, first_name, last_name, phone, email, photo_url, 
+      SELECT idmembers, dni, cuit, birth_date, first_name, last_name, phone, address, email, photo_url, 
              status, paid_until, prepaid_plan, category, tutor_info, family_members, 
              member_number, created_at 
       FROM members 
@@ -36,7 +36,7 @@ class MemberRepository {
 
   async findById(id) {
     const query = `
-      SELECT idmembers, dni, cuit, first_name, last_name, phone, email, photo_url, 
+      SELECT idmembers, dni, cuit, birth_date, first_name, last_name, phone, address, email, photo_url, 
              status, paid_until, prepaid_plan, category, tutor_info, family_members, 
              member_number, created_at 
       FROM members 
@@ -49,26 +49,35 @@ class MemberRepository {
 
   async create(data) {
     const memberNum = data.memberNumber ?? (await this.getNextMemberNumber());
-
-    // Si al registrarse ya se le asigna fecha de pago, se usa; de lo contrario null
     const paidUntil = data.paidUntil || null;
 
     const query = `
       INSERT INTO members (
-        dni, cuit, first_name, last_name, phone, email, photo_url, 
+        dni, cuit, birth_date, first_name, last_name, phone, address, email, photo_url, 
         status, paid_until, prepaid_plan, category, tutor_info, family_members, member_number, created_at
       )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
-    const createdAt = data.createdAt ? new Date(data.createdAt) : new Date();
+    let createdAtFormatted;
+    if (data.createdAt) {
+      const datePart = data.createdAt.split("T")[0];
+      createdAtFormatted = `${datePart} 12:00:00`;
+    } else {
+      const now = new Date();
+      createdAtFormatted = now.toISOString().slice(0, 19).replace("T", " ");
+    }
+
+    const birthDate = data.birthDate ? data.birthDate.split("T")[0] : null;
 
     const params = [
       data.dni ?? null,
       data.cuit ?? null,
+      birthDate,
       data.firstName ?? data.first_name ?? null,
       data.lastName ?? data.last_name ?? null,
       data.phone ?? null,
+      data.address ?? null,
       data.email ?? null,
       data.photoUrl ?? data.photo_url ?? null,
       data.status ?? "active",
@@ -78,7 +87,7 @@ class MemberRepository {
       data.tutorInfo ? JSON.stringify(data.tutorInfo) : null,
       data.familyMembers ? JSON.stringify(data.familyMembers) : null,
       memberNum,
-      createdAt,
+      createdAtFormatted,
     ];
 
     const [result] = await pool.execute(query, params);
@@ -87,7 +96,7 @@ class MemberRepository {
 
   async findAll({ search, status, category }) {
     let query = `
-      SELECT idmembers, dni, cuit, first_name, last_name, phone, email, photo_url, 
+      SELECT idmembers, dni, cuit, birth_date, first_name, last_name, phone, address, email, photo_url, 
              status, paid_until, prepaid_plan, category, tutor_info, family_members, 
              member_number, created_at 
       FROM members 
@@ -106,9 +115,9 @@ class MemberRepository {
     }
 
     if (search) {
-      query += ` AND (dni LIKE ? OR first_name LIKE ? OR last_name LIKE ? OR cuit LIKE ?)`;
+      query += ` AND (dni LIKE ? OR first_name LIKE ? OR last_name LIKE ? OR cuit LIKE ? OR phone LIKE ?)`;
       const term = `%${search}%`;
-      params.push(term, term, term, term);
+      params.push(term, term, term, term, term);
     }
 
     query += " ORDER BY created_at DESC";
@@ -117,163 +126,6 @@ class MemberRepository {
     return rows;
   }
 
-  async updateStatus(id, status) {
-    const query = `UPDATE members SET status = ? WHERE idmembers = ?`;
-    const [result] = await pool.execute(query, [status, id]);
-    return result.affectedRows > 0;
-  }
-
-  // Registrar un plan adelantado / obra
-  async applyPrepaidPlan(id, { months, planName, amountPaid }) {
-    const member = await this.findById(id);
-    if (!member) throw new Error("Socio no encontrado");
-
-    const now = new Date();
-    let baseDate =
-      member.paid_until && new Date(member.paid_until) > now
-        ? new Date(member.paid_until)
-        : now;
-
-    // Sumar meses
-    baseDate.setMonth(baseDate.getMonth() + Number(months));
-
-    // Formato YYYY-MM-DD estricto para MySQL DATE
-    const year = baseDate.getFullYear();
-    const month = String(baseDate.getMonth() + 1).padStart(2, "0");
-    const day = String(baseDate.getDate()).padStart(2, "0");
-    const newPaidUntil = `${year}-${month}-${day}`;
-
-    const planDetail = {
-      planName: planName || "Plan Adelantado de Obras",
-      monthsPrepaid: Number(months),
-      amountPaid: Number(amountPaid) || 0,
-      appliedAt: new Date().toISOString(),
-      paidUntil: newPaidUntil,
-    };
-
-    const query = `
-    UPDATE members 
-    SET status = 'active', 
-        paid_until = ?, 
-        prepaid_plan = ? 
-    WHERE idmembers = ?
-  `;
-
-    const [result] = await pool.execute(query, [
-      newPaidUntil,
-      JSON.stringify(planDetail),
-      id,
-    ]);
-    return { success: result.affectedRows > 0, paidUntil: newPaidUntil };
-  }
-
-  // Extender 1 mes regular tras pago en Mercado Pago
-  async extendRegularMonth(id) {
-    const member = await this.findById(id);
-    if (!member) return false;
-
-    const now = new Date();
-    let baseDate =
-      member.paid_until && new Date(member.paid_until) > now
-        ? new Date(member.paid_until)
-        : now;
-
-    baseDate.setMonth(baseDate.getMonth() + 1);
-    const newPaidUntil = baseDate.toISOString().split("T")[0];
-
-    const query = `
-      UPDATE members 
-      SET status = 'active', 
-          paid_until = ? 
-      WHERE idmembers = ?
-    `;
-    const [result] = await pool.execute(query, [newPaidUntil, id]);
-    return result.affectedRows > 0;
-  }
-
-  // Revisión masiva de vencimientos (para el cronjob)
-  async updateExpiredMemberships() {
-    const today = new Date().toISOString().split("T")[0];
-    const query = `
-      UPDATE members 
-      SET status = 'debtor' 
-      WHERE category != 'honorario' 
-        AND status = 'active' 
-        AND paid_until IS NOT NULL 
-        AND paid_until < ?
-    `;
-    const [result] = await pool.execute(query, [today]);
-    return result.affectedRows;
-  }
-
-  async extendMonths(id, months = 1) {
-    const member = await this.findById(id);
-    if (!member) return false;
-
-    const now = new Date();
-    let baseDate =
-      member.paid_until && new Date(member.paid_until) > now
-        ? new Date(member.paid_until)
-        : now;
-
-    baseDate.setMonth(baseDate.getMonth() + Number(months));
-    const newPaidUntil = baseDate.toISOString().split("T")[0];
-
-    const query = `
-    UPDATE members 
-    SET status = 'active', 
-        paid_until = ? 
-    WHERE idmembers = ?
-  `;
-    const [result] = await pool.execute(query, [newPaidUntil, id]);
-    return result.affectedRows > 0;
-  }
-
-  async create(data) {
-    const memberNum = data.memberNumber ?? (await this.getNextMemberNumber());
-    const paidUntil = data.paidUntil || null;
-
-    const query = `
-      INSERT INTO members (
-        dni, cuit, first_name, last_name, phone, email, photo_url, 
-        status, paid_until, prepaid_plan, category, tutor_info, family_members, member_number, created_at
-      )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `;
-
-    // Normalizar fecha de ingreso en formato YYYY-MM-DD HH:MM:SS para evitar default o desfase UTC
-    let createdAtFormatted;
-    if (data.createdAt) {
-      const datePart = data.createdAt.split("T")[0];
-      createdAtFormatted = `${datePart} 12:00:00`;
-    } else {
-      const now = new Date();
-      createdAtFormatted = now.toISOString().slice(0, 19).replace("T", " ");
-    }
-
-    const params = [
-      data.dni ?? null,
-      data.cuit ?? null,
-      data.firstName ?? data.first_name ?? null,
-      data.lastName ?? data.last_name ?? null,
-      data.phone ?? null,
-      data.email ?? null,
-      data.photoUrl ?? data.photo_url ?? null,
-      data.status ?? "active",
-      paidUntil,
-      data.prepaidPlan ? JSON.stringify(data.prepaidPlan) : null,
-      data.category ?? "general",
-      data.tutorInfo ? JSON.stringify(data.tutorInfo) : null,
-      data.familyMembers ? JSON.stringify(data.familyMembers) : null,
-      memberNum,
-      createdAtFormatted,
-    ];
-
-    const [result] = await pool.execute(query, params);
-    return { insertId: result.insertId, memberNumber: memberNum };
-  }
-
-  // MÉTODO PARA EDITAR DATOS DEL SOCIO
   async update(id, data) {
     const fields = [];
     const params = [];
@@ -286,6 +138,11 @@ class MemberRepository {
       fields.push("cuit = ?");
       params.push(data.cuit || null);
     }
+    if (data.birthDate !== undefined || data.birth_date !== undefined) {
+      fields.push("birth_date = ?");
+      const bDate = data.birthDate || data.birth_date;
+      params.push(bDate ? bDate.split("T")[0] : null);
+    }
     if (data.firstName !== undefined || data.first_name !== undefined) {
       fields.push("first_name = ?");
       params.push(data.firstName || data.first_name);
@@ -297,6 +154,10 @@ class MemberRepository {
     if (data.phone !== undefined) {
       fields.push("phone = ?");
       params.push(data.phone);
+    }
+    if (data.address !== undefined) {
+      fields.push("address = ?");
+      params.push(data.address || null);
     }
     if (data.email !== undefined) {
       fields.push("email = ?");
@@ -339,6 +200,112 @@ class MemberRepository {
     params.push(id);
     const query = `UPDATE members SET ${fields.join(", ")} WHERE idmembers = ?`;
     const [result] = await pool.execute(query, params);
+    return result.affectedRows > 0;
+  }
+
+  async updateStatus(id, status) {
+    const query = `UPDATE members SET status = ? WHERE idmembers = ?`;
+    const [result] = await pool.execute(query, [status, id]);
+    return result.affectedRows > 0;
+  }
+
+  async applyPrepaidPlan(id, { months, planName, amountPaid }) {
+    const member = await this.findById(id);
+    if (!member) throw new Error("Socio no encontrado");
+
+    const now = new Date();
+    let baseDate =
+      member.paid_until && new Date(member.paid_until) > now
+        ? new Date(member.paid_until)
+        : now;
+
+    baseDate.setMonth(baseDate.getMonth() + Number(months));
+    const year = baseDate.getFullYear();
+    const month = String(baseDate.getMonth() + 1).padStart(2, "0");
+    const day = String(baseDate.getDate()).padStart(2, "0");
+    const newPaidUntil = `${year}-${month}-${day}`;
+
+    const planDetail = {
+      planName: planName || "Plan Adelantado de Obras",
+      monthsPrepaid: Number(months),
+      amountPaid: Number(amountPaid) || 0,
+      appliedAt: new Date().toISOString(),
+      paidUntil: newPaidUntil,
+    };
+
+    const query = `
+      UPDATE members 
+      SET status = 'active', 
+          paid_until = ?, 
+          prepaid_plan = ? 
+      WHERE idmembers = ?
+    `;
+
+    const [result] = await pool.execute(query, [
+      newPaidUntil,
+      JSON.stringify(planDetail),
+      id,
+    ]);
+    return { success: result.affectedRows > 0, paidUntil: newPaidUntil };
+  }
+
+  async extendRegularMonth(id) {
+    const member = await this.findById(id);
+    if (!member) return false;
+
+    const now = new Date();
+    let baseDate =
+      member.paid_until && new Date(member.paid_until) > now
+        ? new Date(member.paid_until)
+        : now;
+
+    baseDate.setMonth(baseDate.getMonth() + 1);
+    const newPaidUntil = baseDate.toISOString().split("T")[0];
+
+    const query = `
+      UPDATE members 
+      SET status = 'active', 
+          paid_until = ? 
+      WHERE idmembers = ?
+    `;
+    const [result] = await pool.execute(query, [newPaidUntil, id]);
+    return result.affectedRows > 0;
+  }
+
+  async updateExpiredMemberships() {
+    const today = new Date().toISOString().split("T")[0];
+    const query = `
+      UPDATE members 
+      SET status = 'debtor' 
+      WHERE category != 'honorario' 
+        AND status = 'active' 
+        AND paid_until IS NOT NULL 
+        AND paid_until < ?
+    `;
+    const [result] = await pool.execute(query, [today]);
+    return result.affectedRows;
+  }
+
+  async extendMonths(id, months = 1) {
+    const member = await this.findById(id);
+    if (!member) return false;
+
+    const now = new Date();
+    let baseDate =
+      member.paid_until && new Date(member.paid_until) > now
+        ? new Date(member.paid_until)
+        : now;
+
+    baseDate.setMonth(baseDate.getMonth() + Number(months));
+    const newPaidUntil = baseDate.toISOString().split("T")[0];
+
+    const query = `
+      UPDATE members 
+      SET status = 'active', 
+          paid_until = ? 
+      WHERE idmembers = ?
+    `;
+    const [result] = await pool.execute(query, [newPaidUntil, id]);
     return result.affectedRows > 0;
   }
 }

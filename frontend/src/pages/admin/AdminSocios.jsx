@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import {
   getMembers,
   registerMember,
@@ -19,6 +19,9 @@ export default function AdminSocios() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("todos");
   const [categoryFilter, setCategoryFilter] = useState("todas");
+
+  // Fila expandida para ver familiares / tutor
+  const [expandedMemberId, setExpandedMemberId] = useState(null);
 
   // Modal Alta / Edición
   const [showModal, setShowModal] = useState(false);
@@ -45,8 +48,10 @@ export default function AdminSocios() {
     lastName: "",
     dni: "",
     cuit: "",
+    birthDate: "",
     email: "",
     phone: "",
+    address: "",
     category: "general",
     memberNumber: "",
     photoUrl: "",
@@ -128,15 +133,21 @@ export default function AdminSocios() {
     });
   };
 
+  const toggleExpand = (id) => {
+    setExpandedMemberId((prev) => (prev === id ? null : id));
+  };
+
   const filteredMembers = members.filter((m) => {
     const fullName =
       `${m.first_name || m.firstName || ""} ${m.last_name || m.lastName || ""}`.toLowerCase();
     const dni = String(m.dni || "");
     const cuit = String(m.cuit || "");
+    const address = String(m.address || "").toLowerCase();
     const matchesSearch =
       fullName.includes(search.toLowerCase()) ||
       dni.includes(search) ||
-      cuit.includes(search);
+      cuit.includes(search) ||
+      address.includes(search.toLowerCase());
     const memberStatus = m.status || "active";
     const matchesStatus =
       statusFilter === "todos" || memberStatus === statusFilter;
@@ -257,7 +268,6 @@ export default function AdminSocios() {
     setEditingId(null);
   };
 
-  // Abrir modal en modo edición
   const openEditModal = (member) => {
     setIsEditing(true);
     setEditingId(member.idmembers || member.id);
@@ -299,14 +309,17 @@ export default function AdminSocios() {
     const regDate = member.created_at
       ? member.created_at.split("T")[0]
       : new Date().toISOString().split("T")[0];
+    const bDate = member.birth_date ? member.birth_date.split("T")[0] : "";
 
     setNewMember({
       firstName: member.first_name || member.firstName || "",
       lastName: member.last_name || member.lastName || "",
       dni: member.dni || "",
       cuit: member.cuit || "",
+      birthDate: bDate,
       email: member.email || "",
       phone: member.phone || "",
+      address: member.address || "",
       category: member.category || "general",
       memberNumber: member.member_number || "",
       photoUrl: member.photo_url || member.photoUrl || "",
@@ -413,7 +426,7 @@ export default function AdminSocios() {
             <input
               type="text"
               className="form-control"
-              placeholder="Buscar por apellido, nombre, DNI o CUIT..."
+              placeholder="Buscar por nombre, DNI, CUIT o domicilio..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
@@ -450,7 +463,7 @@ export default function AdminSocios() {
         </div>
       </div>
 
-      {/* Tabla */}
+      {/* Tabla de Socios */}
       <div className="card border-0 shadow-sm overflow-hidden bg-white">
         <div className="table-responsive">
           <table className="table table-hover align-middle mb-0">
@@ -459,8 +472,8 @@ export default function AdminSocios() {
                 <th className="ps-3">N° Socio</th>
                 <th>Foto</th>
                 <th>Nombre y apellido</th>
-                <th>DNI / CUIT</th>
-                <th>Fecha ingreso</th>
+                <th>DNI / CUIT / F. Nac</th>
+                <th>Contacto / Domicilio</th>
                 <th>Categoría</th>
                 <th>Cuota paga hasta</th>
                 <th>Estado</th>
@@ -495,121 +508,278 @@ export default function AdminSocios() {
                     }
                   }
 
+                  let familyList = [];
+                  if (member.family_members) {
+                    try {
+                      familyList =
+                        typeof member.family_members === "string"
+                          ? JSON.parse(member.family_members)
+                          : member.family_members;
+                    } catch (e) {
+                      familyList = [];
+                    }
+                  }
+
+                  let tutorData = null;
+                  if (member.tutor_info) {
+                    try {
+                      tutorData =
+                        typeof member.tutor_info === "string"
+                          ? JSON.parse(member.tutor_info)
+                          : member.tutor_info;
+                    } catch (e) {
+                      tutorData = null;
+                    }
+                  }
+
+                  const isExpanded = expandedMemberId === id;
+
                   return (
-                    <tr key={id}>
-                      <td className="ps-3 fw-bold text-muted">
-                        #{String(member.member_number || id).padStart(4, "0")}
-                      </td>
-                      <td>
-                        {photo ? (
-                          <img
-                            src={photo}
-                            alt={name}
-                            className="rounded-circle object-fit-cover"
-                            style={{ width: "36px", height: "36px" }}
-                          />
-                        ) : (
-                          <div
-                            className="rounded-circle bg-secondary bg-opacity-25 d-flex align-items-center justify-content-center text-muted fw-bold"
-                            style={{
-                              width: "36px",
-                              height: "36px",
-                              fontSize: "13px",
-                            }}
-                          >
-                            {name.charAt(0)}
-                          </div>
-                        )}
-                      </td>
-                      <td className="fw-bold text-dark">{name}</td>
-                      <td className="small">
-                        <div>DNI: {member.dni}</div>
-                        {member.cuit && (
-                          <div className="text-muted">CUIT: {member.cuit}</div>
-                        )}
-                      </td>
-                      <td className="small text-muted">
-                        {formatDate(member.created_at)}
-                      </td>
-                      <td>
-                        <span className="badge bg-light text-dark border">
-                          {categoryLabels[member.category] ||
-                            member.category ||
-                            "General"}
-                        </span>
-                      </td>
-                      <td className="small">
-                        {member.category === "honorario" ? (
-                          <span className="text-muted fst-italic">Exento</span>
-                        ) : member.paid_until ? (
+                    <React.Fragment key={id}>
+                      <tr>
+                        <td className="ps-3 fw-bold text-muted">
+                          #{String(member.member_number || id).padStart(4, "0")}
+                        </td>
+                        <td>
+                          {photo ? (
+                            <img
+                              src={photo}
+                              alt={name}
+                              className="rounded-circle object-fit-cover"
+                              style={{ width: "36px", height: "36px" }}
+                            />
+                          ) : (
+                            <div
+                              className="rounded-circle bg-secondary bg-opacity-25 d-flex align-items-center justify-content-center text-muted fw-bold"
+                              style={{
+                                width: "36px",
+                                height: "36px",
+                                fontSize: "13px",
+                              }}
+                            >
+                              {name.charAt(0)}
+                            </div>
+                          )}
+                        </td>
+                        <td>
+                          <div className="fw-bold text-dark">{name}</div>
+                          <small className="text-muted">
+                            Ingreso: {formatDate(member.created_at)}
+                          </small>
+                        </td>
+                        <td className="small">
+                          <div>DNI: {member.dni}</div>
+                          {member.cuit && (
+                            <div className="text-muted">
+                              CUIT: {member.cuit}
+                            </div>
+                          )}
+                          {member.birth_date && (
+                            <div
+                              className="text-primary"
+                              style={{ fontSize: "11px" }}
+                            >
+                              Nac: {formatDate(member.birth_date)}
+                            </div>
+                          )}
+                        </td>
+                        <td className="small">
+                          <div>Tel: {member.phone}</div>
+                          {member.address ? (
+                            <div className="text-muted fst-italic">
+                              Dom: {member.address}
+                            </div>
+                          ) : (
+                            <div
+                              className="text-muted"
+                              style={{ fontSize: "11px" }}
+                            >
+                              Sin domicilio
+                            </div>
+                          )}
+                        </td>
+                        <td>
                           <div>
-                            <strong>{formatDate(member.paid_until)}</strong>
-                            {planInfo && (
-                              <div>
-                                <span
-                                  className="badge bg-info text-dark"
-                                  style={{ fontSize: "10px" }}
-                                >
-                                  {planInfo.planName || "Plan Obra"} (
-                                  {planInfo.monthsPrepaid}m)
-                                </span>
+                            <span className="badge bg-light text-dark border">
+                              {categoryLabels[member.category] ||
+                                member.category ||
+                                "General"}
+                            </span>
+                          </div>
+
+                          {/* Botón para expandir familiares */}
+                          {member.category === "familiar" && (
+                            <button
+                              type="button"
+                              className="btn btn-sm btn-link p-0 text-decoration-none small text-primary"
+                              onClick={() => toggleExpand(id)}
+                            >
+                              {isExpanded
+                                ? "▲ Ocultar grupo"
+                                : `▼ Ver grupo (${familyList.length})`}
+                            </button>
+                          )}
+
+                          {/* Botón para expandir tutor de juvenil */}
+                          {member.category === "cadete" && tutorData && (
+                            <button
+                              type="button"
+                              className="btn btn-sm btn-link p-0 text-decoration-none small text-info"
+                              onClick={() => toggleExpand(id)}
+                            >
+                              {isExpanded ? "▲ Ocultar tutor" : "▼ Ver tutor"}
+                            </button>
+                          )}
+                        </td>
+                        <td className="small">
+                          {member.category === "honorario" ? (
+                            <span className="text-muted fst-italic">
+                              Exento
+                            </span>
+                          ) : member.paid_until ? (
+                            <div>
+                              <strong>{formatDate(member.paid_until)}</strong>
+                              {planInfo && (
+                                <div>
+                                  <span
+                                    className="badge bg-info text-dark"
+                                    style={{ fontSize: "10px" }}
+                                  >
+                                    {planInfo.planName || "Plan Obra"} (
+                                    {planInfo.monthsPrepaid}m)
+                                  </span>
+                                </div>
+                              )}
+                            </div>
+                          ) : (
+                            <span className="text-muted">Sin registro</span>
+                          )}
+                        </td>
+                        <td>
+                          <span
+                            className={`badge ${
+                              currentStatus === "active"
+                                ? "bg-success"
+                                : currentStatus === "debtor"
+                                  ? "bg-danger"
+                                  : "bg-secondary"
+                            }`}
+                          >
+                            {currentStatus === "active"
+                              ? "Al Día"
+                              : currentStatus === "debtor"
+                                ? "Deudor"
+                                : "Inactivo"}
+                          </span>
+                        </td>
+                        <td className="text-end pe-3">
+                          <div className="d-flex align-items-center justify-content-end gap-2">
+                            <button
+                              type="button"
+                              className="btn btn-outline-secondary btn-sm py-0 px-2"
+                              title="Editar información del socio"
+                              onClick={() => openEditModal(member)}
+                            >
+                              Editar
+                            </button>
+                            <button
+                              type="button"
+                              className="btn btn-outline-primary btn-sm py-0 px-2"
+                              title="Cargar pago voluntario anticipado / aporte de obras"
+                              onClick={() => openPlanModal(member)}
+                              disabled={member.category === "honorario"}
+                            >
+                              + Plan Obra
+                            </button>
+                            <select
+                              className="form-select form-select-sm d-inline-block w-auto py-0"
+                              value={currentStatus}
+                              onChange={(e) =>
+                                handleStatusChange(id, e.target.value)
+                              }
+                            >
+                              <option value="active">Al Día</option>
+                              <option value="debtor">Deudor</option>
+                              <option value="inactive">Inactivo</option>
+                            </select>
+                          </div>
+                        </td>
+                      </tr>
+
+                      {/* Fila desplegable con detalle del Grupo Familiar o Tutor */}
+                      {isExpanded && (
+                        <tr className="bg-light">
+                          <td colSpan="9" className="p-3">
+                            {member.category === "familiar" && (
+                              <div className="p-3 bg-white rounded border">
+                                <h6 className="fw-bold mb-2 text-dark">
+                                  👨‍👩‍👧‍👦 Integrantes adheridos al Grupo Familiar de{" "}
+                                  {name}
+                                </h6>
+                                {familyList.length === 0 ? (
+                                  <p className="text-muted small mb-0">
+                                    No se registraron integrantes adicionales
+                                    para este titular.
+                                  </p>
+                                ) : (
+                                  <div className="table-responsive">
+                                    <table className="table table-sm table-bordered mb-0 small">
+                                      <thead className="table-light">
+                                        <tr>
+                                          <th>Nombre completo</th>
+                                          <th>DNI</th>
+                                          <th>Vínculo</th>
+                                          <th>Fecha de Nacimiento</th>
+                                        </tr>
+                                      </thead>
+                                      <tbody>
+                                        {familyList.map((fam, idx) => (
+                                          <tr key={idx}>
+                                            <td className="fw-semibold">
+                                              {fam.fullName}
+                                            </td>
+                                            <td>{fam.dni}</td>
+                                            <td>
+                                              {fam.relationship || "Familiar"}
+                                            </td>
+                                            <td>{formatDate(fam.birthDate)}</td>
+                                          </tr>
+                                        ))}
+                                      </tbody>
+                                    </table>
+                                  </div>
+                                )}
                               </div>
                             )}
-                          </div>
-                        ) : (
-                          <span className="text-muted">Sin registro</span>
-                        )}
-                      </td>
-                      <td>
-                        <span
-                          className={`badge ${
-                            currentStatus === "active"
-                              ? "bg-success"
-                              : currentStatus === "debtor"
-                                ? "bg-danger"
-                                : "bg-secondary"
-                          }`}
-                        >
-                          {currentStatus === "active"
-                            ? "Al Día"
-                            : currentStatus === "debtor"
-                              ? "Deudor"
-                              : "Inactivo"}
-                        </span>
-                      </td>
-                      <td className="text-end pe-3">
-                        <div className="d-flex align-items-center justify-content-end gap-2">
-                          <button
-                            type="button"
-                            className="btn btn-outline-secondary btn-sm py-0 px-2"
-                            title="Editar información del socio"
-                            onClick={() => openEditModal(member)}
-                          >
-                            Editar
-                          </button>
-                          <button
-                            type="button"
-                            className="btn btn-outline-primary btn-sm py-0 px-2"
-                            title="Cargar pago voluntario anticipado / aporte de obras"
-                            onClick={() => openPlanModal(member)}
-                            disabled={member.category === "honorario"}
-                          >
-                            + Plan Obra
-                          </button>
-                          <select
-                            className="form-select form-select-sm d-inline-block w-auto py-0"
-                            value={currentStatus}
-                            onChange={(e) =>
-                              handleStatusChange(id, e.target.value)
-                            }
-                          >
-                            <option value="active">Al Día</option>
-                            <option value="debtor">Deudor</option>
-                            <option value="inactive">Inactivo</option>
-                          </select>
-                        </div>
-                      </td>
-                    </tr>
+
+                            {member.category === "cadete" && tutorData && (
+                              <div className="p-3 bg-white rounded border">
+                                <h6 className="fw-bold mb-2 text-dark">
+                                  🛡️ Tutor / Responsable Legal de {name}
+                                </h6>
+                                <div className="row g-2 small">
+                                  <div className="col-md-3">
+                                    <strong>Nombre:</strong>{" "}
+                                    {tutorData.fullName || "-"}
+                                  </div>
+                                  <div className="col-md-3">
+                                    <strong>DNI:</strong> {tutorData.dni || "-"}
+                                  </div>
+                                  <div className="col-md-3">
+                                    <strong>Teléfono:</strong>{" "}
+                                    {tutorData.phone || "-"}
+                                  </div>
+                                  <div className="col-md-3">
+                                    <strong>Vínculo:</strong>{" "}
+                                    {tutorData.relationship || "Padre/Madre"}
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+                          </td>
+                        </tr>
+                      )}
+                    </React.Fragment>
                   );
                 })
               )}
@@ -742,7 +912,7 @@ export default function AdminSocios() {
                       />
                     </div>
 
-                    <div className="col-6">
+                    <div className="col-4">
                       <label className="form-label small fw-bold">DNI *</label>
                       <input
                         type="text"
@@ -755,7 +925,7 @@ export default function AdminSocios() {
                       />
                     </div>
 
-                    <div className="col-6">
+                    <div className="col-4">
                       <label className="form-label small fw-bold">CUIT</label>
                       <input
                         type="text"
@@ -764,6 +934,23 @@ export default function AdminSocios() {
                         value={newMember.cuit}
                         onChange={(e) =>
                           setNewMember({ ...newMember, cuit: e.target.value })
+                        }
+                      />
+                    </div>
+
+                    <div className="col-4">
+                      <label className="form-label small fw-bold">
+                        Fecha de Nacimiento
+                      </label>
+                      <input
+                        type="date"
+                        className="form-control form-control-sm"
+                        value={newMember.birthDate}
+                        onChange={(e) =>
+                          setNewMember({
+                            ...newMember,
+                            birthDate: e.target.value,
+                          })
                         }
                       />
                     </div>
@@ -791,6 +978,24 @@ export default function AdminSocios() {
                         value={newMember.email}
                         onChange={(e) =>
                           setNewMember({ ...newMember, email: e.target.value })
+                        }
+                      />
+                    </div>
+
+                    <div className="col-12">
+                      <label className="form-label small fw-bold">
+                        Domicilio
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="Calle, número, barrio o localidad"
+                        className="form-control form-control-sm"
+                        value={newMember.address}
+                        onChange={(e) =>
+                          setNewMember({
+                            ...newMember,
+                            address: e.target.value,
+                          })
                         }
                       />
                     </div>
@@ -930,7 +1135,7 @@ export default function AdminSocios() {
                               key={index}
                               className="row g-2 align-items-end mb-2 border-bottom pb-2"
                             >
-                              <div className="col-4">
+                              <div className="col-3">
                                 <label className="form-label small mb-1">
                                   Nombre
                                 </label>
@@ -968,6 +1173,23 @@ export default function AdminSocios() {
                               </div>
                               <div className="col-3">
                                 <label className="form-label small mb-1">
+                                  F. Nacimiento
+                                </label>
+                                <input
+                                  type="date"
+                                  className="form-control form-control-sm"
+                                  value={fam.birthDate || ""}
+                                  onChange={(e) =>
+                                    updateFamilyMember(
+                                      index,
+                                      "birthDate",
+                                      e.target.value,
+                                    )
+                                  }
+                                />
+                              </div>
+                              <div className="col-2">
+                                <label className="form-label small mb-1">
                                   Vínculo
                                 </label>
                                 <input
@@ -983,13 +1205,13 @@ export default function AdminSocios() {
                                   }
                                 />
                               </div>
-                              <div className="col-2 text-end">
+                              <div className="col-1 text-end">
                                 <button
                                   type="button"
                                   className="btn btn-outline-danger btn-sm w-100"
                                   onClick={() => removeFamilyMember(index)}
                                 >
-                                  Quitar
+                                  &times;
                                 </button>
                               </div>
                             </div>
