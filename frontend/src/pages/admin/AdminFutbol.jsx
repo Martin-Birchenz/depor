@@ -4,6 +4,7 @@ import autoTable from "jspdf-autotable";
 import {
   getCanteenProducts,
   createCanteenProduct,
+  updateCanteenProduct,
   getCanteenSales,
   getCanteenSummary,
   closeCanteenSession,
@@ -32,6 +33,7 @@ export default function AdminFutbol() {
   const [paymentMethod, setPaymentMethod] = useState("efectivo");
   const [submittingSale, setSubmittingSale] = useState(false);
   const [showProductModal, setShowProductModal] = useState(false);
+  const [editingProduct, setEditingProduct] = useState(null);
   const [showSummaryModal, setShowSummaryModal] = useState(false);
   const [dailySummary, setDailySummary] = useState(null);
   const [newProd, setNewProd] = useState({
@@ -199,7 +201,6 @@ export default function AdminFutbol() {
     );
     const netoFinal = ingresosBrutos - totalEgresos;
 
-    // Encabezado
     doc.setFontSize(16);
     doc.setFont("helvetica", "bold");
     doc.text("Club Deportivo Nogoyá - Subcomisión de Fútbol", 14, 18);
@@ -214,7 +215,6 @@ export default function AdminFutbol() {
     );
     doc.setTextColor(0);
 
-    // Tabla de Balance General
     autoTable(doc, {
       startY: 32,
       head: [["Ingresos Brutos", "Gastos Operativos", "Saldo Neto Final"]],
@@ -234,7 +234,6 @@ export default function AdminFutbol() {
       },
     });
 
-    // Tabla 1: Ventas Despachadas
     let nextY = doc.lastAutoTable.finalY + 10;
     doc.setFontSize(12);
     doc.setFont("helvetica", "bold");
@@ -261,7 +260,6 @@ export default function AdminFutbol() {
       },
     });
 
-    // Tabla 2: Gastos Operativos
     nextY = doc.lastAutoTable.finalY + 10;
     doc.setFontSize(12);
     doc.setFont("helvetica", "bold");
@@ -313,20 +311,61 @@ export default function AdminFutbol() {
     }
   };
 
-  const handleCreateProduct = async (e) => {
+  const openNewProductModal = () => {
+    setEditingProduct(null);
+    setNewProd({ name: "", category: "comida", salePrice: "", stock: 0 });
+    setShowProductModal(true);
+  };
+
+  const openEditProductModal = (e, prod) => {
+    e.stopPropagation();
+    setEditingProduct(prod);
+    setNewProd({
+      name: prod.name,
+      category: prod.category || "comida",
+      salePrice: prod.sale_price ?? prod.salePrice ?? "",
+      stock: prod.stock ?? 0,
+    });
+    setShowProductModal(true);
+  };
+
+  const handleDeactivateProduct = async (e, prod) => {
+    e.stopPropagation();
+    if (!window.confirm(`¿Quitar "${prod.name}" del mostrador?`)) return;
+    try {
+      await updateCanteenProduct(prod.id, { isActive: false });
+      setCart((prev) => prev.filter((item) => item.id !== prod.id));
+      loadAllData();
+      addToast("Producto quitado del mostrador", "success");
+    } catch {
+      addToast("Error al quitar producto.", "error");
+    }
+  };
+
+  const handleSaveProduct = async (e) => {
     e.preventDefault();
     try {
-      await createCanteenProduct({
-        ...newProd,
+      const payload = {
+        name: newProd.name,
+        category: newProd.category,
         salePrice: Number(newProd.salePrice),
         stock: Number(newProd.stock),
-      });
+      };
+
+      if (editingProduct) {
+        await updateCanteenProduct(editingProduct.id, payload);
+        addToast("Producto actualizado con éxito", "success");
+      } else {
+        await createCanteenProduct(payload);
+        addToast("Producto / Evento cargado con éxito", "success");
+      }
+
       setShowProductModal(false);
+      setEditingProduct(null);
       setNewProd({ name: "", category: "comida", salePrice: "", stock: 0 });
       loadAllData();
-      addToast("Producto / Evento cargado con éxito", "success");
     } catch {
-      addToast("Error al registrar producto.", "error");
+      addToast("Error al guardar producto.", "error");
     }
   };
 
@@ -575,7 +614,7 @@ export default function AdminFutbol() {
           <div className="d-flex justify-content-end mb-3">
             <button
               className="btn btn-outline-dark btn-sm fw-bold px-3"
-              onClick={() => setShowProductModal(true)}
+              onClick={openNewProductModal}
             >
               + Agregar Producto
             </button>
@@ -595,22 +634,51 @@ export default function AdminFutbol() {
                   <div className="row g-3">
                     {products.map((prod) => (
                       <div key={prod.id} className="col-6 col-md-4">
-                        <button
-                          type="button"
-                          disabled={prod.stock <= 0}
+                        <div
+                          role="button"
+                          tabIndex={0}
                           className="btn btn-light border text-start w-100 p-3 h-100 d-flex flex-column justify-content-between"
-                          style={{ opacity: prod.stock > 0 ? 1 : 0.5 }}
+                          style={{
+                            opacity: prod.stock > 0 ? 1 : 0.65,
+                            cursor: prod.stock > 0 ? "pointer" : "default",
+                          }}
                           onClick={() => addToCart(prod)}
                         >
                           <div>
-                            {prod.category === "evento" && (
-                              <span
-                                className="badge bg-warning text-dark mb-1"
-                                style={{ fontSize: "10px" }}
-                              >
-                                Evento
-                              </span>
-                            )}
+                            <div className="d-flex justify-content-between align-items-start gap-1 mb-1">
+                              <div>
+                                {prod.category === "evento" && (
+                                  <span
+                                    className="badge bg-warning text-dark"
+                                    style={{ fontSize: "10px" }}
+                                  >
+                                    Evento
+                                  </span>
+                                )}
+                              </div>
+                              <div className="d-flex gap-1">
+                                <button
+                                  type="button"
+                                  title="Editar precio o stock"
+                                  className="btn btn-outline-secondary py-0 px-1"
+                                  style={{ fontSize: "11px" }}
+                                  onClick={(e) => openEditProductModal(e, prod)}
+                                >
+                                  Editar
+                                </button>
+                                <button
+                                  type="button"
+                                  title="Quitar del mostrador"
+                                  className="btn btn-outline-danger py-0 px-1"
+                                  style={{ fontSize: "11px" }}
+                                  onClick={(e) =>
+                                    handleDeactivateProduct(e, prod)
+                                  }
+                                >
+                                  &times;
+                                </button>
+                              </div>
+                            </div>
                             <div className="fw-bold text-dark">{prod.name}</div>
                           </div>
                           <div className="mt-2 d-flex justify-content-between align-items-center w-100">
@@ -620,11 +688,17 @@ export default function AdminFutbol() {
                                 prod.sale_price || prod.salePrice,
                               ).toLocaleString("es-AR")}
                             </span>
-                            <span className="text-muted small">
+                            <span
+                              className={`small ${
+                                prod.stock <= 0
+                                  ? "text-danger fw-bold"
+                                  : "text-muted"
+                              }`}
+                            >
                               Disp: {prod.stock}
                             </span>
                           </div>
-                        </button>
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -1275,7 +1349,9 @@ export default function AdminFutbol() {
             <div className="modal-content border-0 shadow">
               <div className="modal-header bg-black text-white">
                 <h5 className="modal-title fw-bold">
-                  Nuevo Ítem de Cantina o Venta Especial
+                  {editingProduct
+                    ? "Editar Ítem / Reponer Stock"
+                    : "Nuevo Ítem de Cantina o Venta Especial"}
                 </h5>
                 <button
                   type="button"
@@ -1283,7 +1359,7 @@ export default function AdminFutbol() {
                   onClick={() => setShowProductModal(false)}
                 ></button>
               </div>
-              <form onSubmit={handleCreateProduct}>
+              <form onSubmit={handleSaveProduct}>
                 <div className="modal-body p-4">
                   <div className="row g-3">
                     <div className="col-12">
@@ -1358,7 +1434,7 @@ export default function AdminFutbol() {
                     Cancelar
                   </button>
                   <button type="submit" className="btn btn-sm btn-dark fw-bold">
-                    Guardar
+                    {editingProduct ? "Guardar Cambios" : "Guardar"}
                   </button>
                 </div>
               </form>

@@ -10,6 +10,11 @@ export const createCanteenProduct = async (productData) => {
   return response.data.data;
 };
 
+export const updateCanteenProduct = async (id, productData) => {
+  const response = await api.put(`/canteen/products/${id}`, productData);
+  return response.data.data;
+};
+
 export const getCanteenSales = async () => {
   const response = await api.get("/canteen/sales");
   return response.data.data;

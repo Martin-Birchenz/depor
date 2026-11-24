@@ -36,11 +36,24 @@ class CanteenController {
   async updateProduct(req, res, next) {
     try {
       const { id } = req.params;
-      const { salePrice, stock, isActive } = req.body;
+      const { name, category, salePrice, stock, isActive } = req.body;
 
       await pool.query(
-        "UPDATE canteen_products SET sale_price = COALESCE(?, sale_price), stock = COALESCE(?, stock), is_active = COALESCE(?, is_active) WHERE id = ? AND point_of_sale = 'general'",
-        [salePrice, stock, isActive, id],
+        `UPDATE canteen_products 
+         SET name = COALESCE(?, name),
+             category = COALESCE(?, category),
+             sale_price = COALESCE(?, sale_price), 
+             stock = COALESCE(?, stock), 
+             is_active = COALESCE(?, is_active) 
+         WHERE id = ? AND point_of_sale = 'general'`,
+        [
+          name ?? null,
+          category ?? null,
+          salePrice ?? null,
+          stock ?? null,
+          isActive ?? null,
+          id,
+        ],
       );
 
       return sendSuccess(res, { id }, "Producto actualizado con éxito", 200);
