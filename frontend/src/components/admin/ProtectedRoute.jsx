@@ -11,8 +11,8 @@ const getDefaultRoute = (role) => {
       return "/admin/pelota-paleta";
     case "salon":
       return "/admin/salon";
-    case "cantina":
-      return "/admin/cantina";
+    case "futbol":
+      return "/admin/futbol";
     case "tienda":
       return "/admin/indumentaria";
     case "juveniles":
