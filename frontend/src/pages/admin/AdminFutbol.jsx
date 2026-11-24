@@ -331,7 +331,7 @@ export default function AdminFutbol() {
     seguro_social: "Pago Seguro Social",
     viajes: "Viajes / Traslados",
     arbitraje: "Arbitraje / Liga",
-    mercaderia: "Mercadería Cantina / Pollada",
+    mercaderia: "Mercadería Cantina",
     otros: "Otros Gastos",
   };
 
@@ -1051,9 +1051,7 @@ export default function AdminFutbol() {
                           Viajes / Colectivo / Combustible
                         </option>
                         <option value="arbitraje">Arbitraje / Liga</option>
-                        <option value="mercaderia">
-                          Mercadería Cantina / Pollada
-                        </option>
+                        <option value="mercaderia">Mercadería Cantina</option>
                         <option value="otros">Otros Gastos</option>
                       </select>
                     </div>
