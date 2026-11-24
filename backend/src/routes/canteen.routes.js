@@ -8,7 +8,7 @@ const { createCanteenSaleSchema } = require("../schemas/canteen.schema.js");
 const router = Router();
 
 router.use(authenticate);
-router.use(authorize(["adminBirchenz", "cantina", "secretaria"]));
+router.use(authorize(["adminBirchenz", "futbol", "secretaria"]));
 
 router.get("/products", (req, res, next) =>
   canteenController.getProducts(req, res, next),

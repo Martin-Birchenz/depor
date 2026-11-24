@@ -40,9 +40,9 @@ export default function AdminLayout() {
       roles: ["admin", "tienda", "secretaria"],
     },
     {
-      label: "Cantina",
-      to: "/admin/cantina",
-      roles: ["admin", "cantina", "secretaria"],
+      label: "Fútbol",
+      to: "/admin/futbol",
+      roles: ["admin", "futbol", "secretaria"],
     },
     {
       label: "Infantiles",
