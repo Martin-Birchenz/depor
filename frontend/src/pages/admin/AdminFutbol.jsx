@@ -1,4 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 import {
   getCanteenProducts,
   createCanteenProduct,
@@ -158,17 +160,154 @@ export default function AdminFutbol() {
     }
   };
 
+  const expenseCategoryLabels = {
+    policia: "Seguridad / Policía",
+    seguro_social: "Pago Seguro Social",
+    viajes: "Viajes / Traslados",
+    arbitraje: "Arbitraje / Liga",
+    mercaderia: "Mercadería Cantina",
+    otros: "Otros Gastos",
+  };
+
+  const formatDate = (dateStr) => {
+    if (!dateStr) return "-";
+    const parts = dateStr.split("T")[0].split("-");
+    return parts.length === 3 ? `${parts[2]}/${parts[1]}/${parts[0]}` : dateStr;
+  };
+
+  const totalIngresos = sales.reduce(
+    (acc, s) => acc + Number(s.total_amount || s.totalAmount || 0),
+    0,
+  );
+  const totalEgresos = expenses.reduce(
+    (acc, e) => acc + Number(e.amount || 0),
+    0,
+  );
+  const balanceNeto = totalIngresos - totalEgresos;
+
+  const generateSessionPDF = (isFinalClose = false) => {
+    const doc = new jsPDF();
+    const now = new Date();
+    const fechaStr = now.toLocaleDateString("es-AR");
+    const horaStr = now.toLocaleTimeString("es-AR", {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+
+    const ingresosBrutos = Number(
+      dailySummary?.summary?.total ?? totalIngresos,
+    );
+    const netoFinal = ingresosBrutos - totalEgresos;
+
+    // Encabezado
+    doc.setFontSize(16);
+    doc.setFont("helvetica", "bold");
+    doc.text("Club Deportivo Nogoyá - Subcomisión de Fútbol", 14, 18);
+
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(90);
+    doc.text(
+      `${isFinalClose ? "Cierre Oficial de Jornada" : "Resumen Parcial de Jornada"} | Fecha: ${fechaStr} - ${horaStr} hs`,
+      14,
+      25,
+    );
+    doc.setTextColor(0);
+
+    // Tabla de Balance General
+    autoTable(doc, {
+      startY: 32,
+      head: [["Ingresos Brutos", "Gastos Operativos", "Saldo Neto Final"]],
+      body: [
+        [
+          `+$${ingresosBrutos.toLocaleString("es-AR")}`,
+          `-$${totalEgresos.toLocaleString("es-AR")}`,
+          `$${netoFinal.toLocaleString("es-AR")}`,
+        ],
+      ],
+      theme: "grid",
+      headStyles: { fillColor: [33, 37, 41], halign: "center" },
+      bodyStyles: {
+        halign: "center",
+        fontStyle: "bold",
+        fontSize: 11,
+      },
+    });
+
+    // Tabla 1: Ventas Despachadas
+    let nextY = doc.lastAutoTable.finalY + 10;
+    doc.setFontSize(12);
+    doc.setFont("helvetica", "bold");
+    doc.text("Detalle de Ventas Despachadas (Cantina y Eventos)", 14, nextY);
+
+    const salesRows =
+      dailySummary?.items?.length > 0
+        ? dailySummary.items.map((it) => [
+            it.name,
+            `${it.total_qty} u.`,
+            `$${Number(it.total_amount).toLocaleString("es-AR")}`,
+          ])
+        : [["Sin ventas registradas en esta jornada", "-", "$0"]];
+
+    autoTable(doc, {
+      startY: nextY + 4,
+      head: [["Artículo / Evento", "Cantidad", "Recaudado"]],
+      body: salesRows,
+      theme: "striped",
+      headStyles: { fillColor: [25, 135, 84] },
+      columnStyles: {
+        1: { halign: "center" },
+        2: { halign: "right" },
+      },
+    });
+
+    // Tabla 2: Gastos Operativos
+    nextY = doc.lastAutoTable.finalY + 10;
+    doc.setFontSize(12);
+    doc.setFont("helvetica", "bold");
+    doc.text("Detalle de Gastos Operativos", 14, nextY);
+
+    const expenseRows =
+      expenses.length > 0
+        ? expenses.map((exp) => [
+            formatDate(exp.expense_date),
+            expenseCategoryLabels[exp.category] || exp.category,
+            exp.concept,
+            exp.payment_method,
+            `-$${Number(exp.amount).toLocaleString("es-AR")}`,
+          ])
+        : [["-", "-", "Sin egresos registrados en esta jornada", "-", "$0"]];
+
+    autoTable(doc, {
+      startY: nextY + 4,
+      head: [["Fecha", "Rubro", "Concepto", "Pago", "Monto"]],
+      body: expenseRows,
+      theme: "striped",
+      headStyles: { fillColor: [220, 53, 69] },
+      columnStyles: {
+        4: { halign: "right" },
+      },
+    });
+
+    const fileDate = now.toISOString().split("T")[0];
+    doc.save(`Jornada_Futbol_${fileDate}.pdf`);
+  };
+
   const handleCloseSession = async () => {
     const confirmClose = window.confirm(
-      "¿Cerrar la jornada actual de Fútbol? Se reiniciarán tanto la caja de cantina/ventas como los gastos operativos de la jornada.",
+      "¿Cerrar la jornada actual de Fútbol? Se descargará el PDF resumen y se reiniciarán tanto la caja de cantina/ventas como los gastos operativos.",
     );
     if (!confirmClose) return;
 
     try {
+      generateSessionPDF(true);
       await Promise.all([closeCanteenSession(), closeFootballExpenses()]);
       setShowSummaryModal(false);
       loadAllData();
-      addToast("Jornada cerrada exitosamente. Balance reiniciado.", "success");
+      addToast(
+        "Jornada cerrada exitosamente. PDF descargado y balance reiniciado.",
+        "success",
+      );
     } catch {
       addToast("Error al cerrar la jornada.", "error");
     }
@@ -297,16 +436,6 @@ export default function AdminFutbol() {
     }
   };
 
-  const totalIngresos = sales.reduce(
-    (acc, s) => acc + Number(s.total_amount || s.totalAmount || 0),
-    0,
-  );
-  const totalEgresos = expenses.reduce(
-    (acc, e) => acc + Number(e.amount || 0),
-    0,
-  );
-  const balanceNeto = totalIngresos - totalEgresos;
-
   const filteredPlayers = players.filter((p) => {
     const fullName = `${p.first_name} ${p.last_name}`.toLowerCase();
     const matchesSearch =
@@ -326,26 +455,11 @@ export default function AdminFutbol() {
     (p) => p.insurance_status === "baja_solicitada",
   ).length;
 
-  const expenseCategoryLabels = {
-    policia: "Seguridad / Policía",
-    seguro_social: "Pago Seguro Social",
-    viajes: "Viajes / Traslados",
-    arbitraje: "Arbitraje / Liga",
-    mercaderia: "Mercadería Cantina",
-    otros: "Otros Gastos",
-  };
-
   const insuranceBadges = {
     activo: { label: "Seguro Activo", cls: "bg-success" },
     pendiente_alta: { label: "Pendiente Alta", cls: "bg-warning text-dark" },
     baja_solicitada: { label: "Dar de Baja", cls: "bg-danger" },
     inactivo: { label: "Baja / Inactivo", cls: "bg-secondary" },
-  };
-
-  const formatDate = (dateStr) => {
-    if (!dateStr) return "-";
-    const parts = dateStr.split("T")[0].split("-");
-    return parts.length === 3 ? `${parts[2]}/${parts[1]}/${parts[0]}` : dateStr;
   };
 
   return (
@@ -1347,13 +1461,22 @@ export default function AdminFutbol() {
               </div>
 
               <div className="modal-footer bg-light d-flex justify-content-between">
-                <button
-                  type="button"
-                  className="btn btn-danger fw-bold"
-                  onClick={handleCloseSession}
-                >
-                  Cerrar Jornada y Reiniciar Caja
-                </button>
+                <div className="d-flex gap-2">
+                  <button
+                    type="button"
+                    className="btn btn-danger fw-bold"
+                    onClick={handleCloseSession}
+                  >
+                    Cerrar Jornada y Descargar PDF
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-outline-dark fw-bold"
+                    onClick={() => generateSessionPDF(false)}
+                  >
+                    Descargar PDF
+                  </button>
+                </div>
                 <button
                   type="button"
                   className="btn btn-secondary"

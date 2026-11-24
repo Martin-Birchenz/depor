@@ -30,7 +30,7 @@ router.post("/expenses", (req, res, next) =>
   footballController.createExpense(req, res, next),
 );
 router.post("/expenses/close", (req, res, next) =>
-  footballController.closeExpenses(req, res, next),
+  footballController.closeExpensesSession(req, res, next),
 );
 
 module.exports = router;
