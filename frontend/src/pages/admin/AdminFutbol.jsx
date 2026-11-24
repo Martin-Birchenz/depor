@@ -1202,7 +1202,7 @@ export default function AdminFutbol() {
                       >
                         <option value="comida">Comida</option>
                         <option value="bebida">Bebida</option>
-                        <option value="evento">Pollada / Venta Especial</option>
+                        <option value="evento">Ventas especiales</option>
                         <option value="kiosco">Kiosco</option>
                       </select>
                     </div>
