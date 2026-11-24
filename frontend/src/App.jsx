@@ -1,4 +1,10 @@
-import { BrowserRouter, Routes, Route, Outlet } from "react-router-dom";
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  Outlet,
+  Navigate,
+} from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
 
 import Navbar from "./components/layout/Navbar";
@@ -21,7 +27,7 @@ import Dashboard from "./components/admin/Dashboard";
 import AdminSocios from "./pages/admin/AdminSocios";
 import AdminColonia from "./pages/admin/AdminColonia.jsx";
 import AdminIndumentaria from "./pages/admin/AdminIndumentaria.jsx";
-import AdminCantina from "./pages/admin/AdminCantina.jsx";
+import AdminFutbol from "./pages/admin/AdminFutbol.jsx";
 import AdminInfantiles from "./pages/admin/AdminInfantiles.jsx";
 import AdminTenis from "./pages/admin/AdminTenis.jsx";
 import AdminPadel from "./pages/admin/AdminPadel.jsx";
@@ -132,11 +138,15 @@ export default function App() {
               <Route
                 element={
                   <ProtectedRoute
-                    allowedRoles={["admin", "secretaria", "cantina"]}
+                    allowedRoles={["admin", "secretaria", "futbol"]}
                   />
                 }
               >
-                <Route path="/admin/cantina" element={<AdminCantina />} />
+                <Route path="/admin/futbol" element={<AdminFutbol />} />
+                <Route
+                  path="/admin/cantina"
+                  element={<Navigate to="/admin/futbol" replace />}
+                />
               </Route>
 
               <Route
