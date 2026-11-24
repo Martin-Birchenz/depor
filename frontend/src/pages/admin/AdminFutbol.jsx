@@ -1200,7 +1200,7 @@ export default function AdminFutbol() {
                           setNewProd({ ...newProd, category: e.target.value })
                         }
                       >
-                        <option value="comida">Comida / Buffet</option>
+                        <option value="comida">Comida</option>
                         <option value="bebida">Bebida</option>
                         <option value="evento">Pollada / Venta Especial</option>
                         <option value="kiosco">Kiosco</option>
