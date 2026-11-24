@@ -21,9 +21,8 @@ import LoadingSpinner from "../../components/common/LoadingSpinner";
 
 export default function AdminFutbol() {
   const { addToast } = useToast();
-  const [activeTab, setActiveTab] = useState("cantina"); // 'cantina' | 'plantel' | 'gastos'
+  const [activeTab, setActiveTab] = useState("cantina");
 
-  // --- ESTADOS CANTINA / POLLADAS ---
   const [products, setProducts] = useState([]);
   const [sales, setSales] = useState([]);
   const [loadingCantina, setLoadingCantina] = useState(true);
@@ -40,7 +39,6 @@ export default function AdminFutbol() {
     stock: 0,
   });
 
-  // --- ESTADOS PLANTEL Y SEGURO SOCIAL ---
   const [players, setPlayers] = useState([]);
   const [loadingPlayers, setLoadingPlayers] = useState(true);
   const [divisionFilter, setDivisionFilter] = useState("todas");
@@ -60,7 +58,6 @@ export default function AdminFutbol() {
     notes: "",
   });
 
-  // --- ESTADOS GASTOS OPERATIVOS (POLICÍA, SEGURO, VIAJES) ---
   const [expenses, setExpenses] = useState([]);
   const [showExpenseModal, setShowExpenseModal] = useState(false);
   const [expenseForm, setExpenseForm] = useState({
@@ -97,7 +94,6 @@ export default function AdminFutbol() {
     loadAllData();
   }, [loadAllData]);
 
-  // --- LÓGICA CANTINA / POLLADAS ---
   const addToCart = (product) => {
     if (product.stock <= 0) return;
     setCart((prev) => {
@@ -195,7 +191,6 @@ export default function AdminFutbol() {
     }
   };
 
-  // --- LÓGICA PLANTEL Y SEGURO SOCIAL ---
   const openNewPlayerModal = () => {
     setEditingPlayer(null);
     setPlayerForm({
@@ -282,7 +277,6 @@ export default function AdminFutbol() {
     }
   };
 
-  // --- LÓGICA GASTOS OPERATIVOS ---
   const handleCreateExpense = async (e) => {
     e.preventDefault();
     try {
@@ -303,7 +297,6 @@ export default function AdminFutbol() {
     }
   };
 
-  // --- CÁLCULOS Y FILTROS ---
   const totalIngresos = sales.reduce(
     (acc, s) => acc + Number(s.total_amount || s.totalAmount || 0),
     0,
@@ -357,21 +350,16 @@ export default function AdminFutbol() {
 
   return (
     <div>
-      {/* Header Principal */}
       <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
         <div>
           <h2 className="fw-bold mb-1">Subcomisión de Fútbol</h2>
-          <span className="text-muted small">
-            Primera División y Sub-23 · Cantina, Eventos, Plantel y Seguro
-            Social
-          </span>
         </div>
         <div className="d-flex flex-wrap gap-2">
           <button
             className="btn btn-outline-danger btn-sm fw-bold px-3"
             onClick={() => setShowExpenseModal(true)}
           >
-            - Registrar Gasto (Policía / Viaje / Seguro)
+            - Registrar Gasto
           </button>
           <button
             className="btn btn-dark btn-sm fw-bold px-3"
@@ -382,7 +370,6 @@ export default function AdminFutbol() {
         </div>
       </div>
 
-      {/* Tarjetas de Balance General */}
       <div className="row g-3 mb-4">
         <div className="col-12 col-md-4">
           <div className="card border-0 shadow-sm p-3 bg-white">
@@ -400,7 +387,7 @@ export default function AdminFutbol() {
         <div className="col-12 col-md-4">
           <div className="card border-0 shadow-sm p-3 bg-white">
             <span className="text-muted small fw-bold text-uppercase">
-              Gastos Operativos (Policía / Seguro / Viajes)
+              Gastos Operativos
             </span>
             <h3 className="fw-bold text-danger mt-1 mb-0">
               -${totalEgresos.toLocaleString("es-AR")}
@@ -438,7 +425,7 @@ export default function AdminFutbol() {
             }`}
             onClick={() => setActiveTab("cantina")}
           >
-            Cantina y Ventas Especiales (Pollos)
+            Cantina y Ventas Especiales
           </button>
         </li>
         <li className="nav-item">
@@ -463,7 +450,7 @@ export default function AdminFutbol() {
             }`}
             onClick={() => setActiveTab("gastos")}
           >
-            Gastos (Policía, Seguro, Viajes)
+            Gastos
           </button>
         </li>
       </ul>
@@ -476,7 +463,7 @@ export default function AdminFutbol() {
               className="btn btn-outline-dark btn-sm fw-bold px-3"
               onClick={() => setShowProductModal(true)}
             >
-              + Agregar Producto / Pollada
+              + Agregar Producto
             </button>
           </div>
 
@@ -507,7 +494,7 @@ export default function AdminFutbol() {
                                 className="badge bg-warning text-dark mb-1"
                                 style={{ fontSize: "10px" }}
                               >
-                                Evento / Pollada
+                                Evento
                               </span>
                             )}
                             <div className="fw-bold text-dark">{prod.name}</div>
@@ -536,8 +523,7 @@ export default function AdminFutbol() {
                 <h5 className="fw-bold mb-3">Ticket Actual</h5>
                 {cart.length === 0 ? (
                   <div className="text-center py-5 text-muted my-auto">
-                    Seleccioná productos o pollos/bonos de la izquierda para
-                    cobrar.
+                    Seleccioná productos de la izquierda para cobrar.
                   </div>
                 ) : (
                   <>
