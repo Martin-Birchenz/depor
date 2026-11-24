@@ -359,7 +359,7 @@ export default function AdminFutbol() {
             className="btn btn-outline-danger btn-sm fw-bold px-3"
             onClick={() => setShowExpenseModal(true)}
           >
-            - Registrar Gasto
+            Registrar Gasto
           </button>
           <button
             className="btn btn-dark btn-sm fw-bold px-3"
